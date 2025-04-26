@@ -1,7 +1,14 @@
-use std::{collections::HashSet, path::Path};
+use crate::errors::ConfigError;
+use std::{
+    collections::HashSet,
+    path::{Path, PathBuf},
+};
 
 use chrono::{Month, Weekday};
 use serde::{Deserialize, Serialize};
+
+pub static CONFIG_VAR: &str = "OCASSION_CONFIG";
+pub static CONFIG_FILE_NAME: &str = "ocassions.json";
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct Config {
@@ -27,6 +34,44 @@ pub enum DayOf {
     #[serde(rename = "month")]
     Month(HashSet<u8>),
 }
+
+impl Config {
+    pub fn load() -> Result<Config, ConfigError> {
+        let file_path_str = std::env::var(CONFIG_VAR).unwrap_or(format!(
+            "{}/{}",
+            dirs::config_dir()
+                .ok_or(ConfigError::UndeterminableConfigLocation)?
+                .to_string_lossy(),
+            CONFIG_FILE_NAME
+        ));
+        Self::load_from(&PathBuf::from(file_path_str))
+    }
+
+    fn load_from(path: &Path) -> Result<Config, ConfigError> {
+        let contents = std::fs::read_to_string(path)?;
+
+        Ok(serde_json::from_str(&contents)?)
+    }
+
+    pub fn save_default() -> Result<(), ConfigError> {
+        let file_path_str = std::env::var(CONFIG_VAR).unwrap_or(format!(
+            "{}/{}",
+            dirs::config_dir()
+                .ok_or(ConfigError::UndeterminableConfigLocation)?
+                .to_string_lossy(),
+            CONFIG_FILE_NAME
+        ));
+        Self::save_default_to(&PathBuf::from(file_path_str))
+    }
+
+    fn save_default_to(path: &Path) -> Result<(), ConfigError> {
+        let json = serde_json::to_value(Config::default())?;
+        let json_str = json.to_string();
+        std::fs::write(path, json_str)?;
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use map_macro::hash_set;
