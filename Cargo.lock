@@ -147,6 +147,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "colored",
+ "serde",
  "serde_json",
 ]
 
