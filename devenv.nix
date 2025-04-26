@@ -12,7 +12,9 @@
 
   # https://devenv.sh/languages/
   # languages.rust.enable = true;
-  packages = [pkgs.cargo-tarpaulin];
+  packages = with pkgs; [
+    cargo-tarpaulin
+  ];
 
   languages.rust = {
     enable = true;
@@ -32,8 +34,6 @@
   # '';
   #
   # enterShell = ''
-  #   hello
-  #   git --version
   # '';
 
   # https://devenv.sh/tasks/
