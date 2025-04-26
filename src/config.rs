@@ -78,36 +78,49 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    /// A properly made `Config` should serialize properly.
-    fn serialize() {
-        let test_config = Config {
-            dates: vec![TimeRangeMessage {
-                time: TimeRange {
-                    day_of: Some(DayOf::Week(hash_set! { Weekday::Mon, Weekday::Fri })),
-                    month: Some(hash_set! { Month::September }),
-                    year: None,
-                },
-                message: "hello!".to_string(),
-            }],
+    fn setup() {
+        let pwd = std::env::current_dir().unwrap();
+        let pwd = pwd.to_str().unwrap();
+        unsafe {
+            // SAFETY: this app is single threaded.
+            // https://doc.rust-lang.org/std/env/fn.set_var.html#safety
+            std::env::set_var(CONFIG_VAR, format!("{pwd}/{CONFIG_FILE_NAME}"));
+        }
+    }
+    fn teardown() {
+        let Ok(config_path) = std::env::var(CONFIG_VAR) else {
+            return;
         };
-        let json = serde_json::to_string(&test_config).unwrap();
-
-        let decoded: serde_json::Value = serde_json::from_str(&json).unwrap();
-
-        let dates = decoded["dates"].as_array().unwrap();
-        let time_range_msg = dates[0].as_object().unwrap();
-
-        let message = time_range_msg.get("message");
-        assert_eq!(message.unwrap().as_str().unwrap(), "hello!");
-
-        let time = time_range_msg.get("time").unwrap().as_object().unwrap();
-        assert!(time.get("year").unwrap().is_null());
-        assert!(time.get("month").unwrap().is_array());
-        assert!(time.get("day_of").unwrap().is_object());
+        _ = std::fs::remove_file(config_path);
     }
 
     #[test]
+    /// A default `Config` should be created.
+    fn serialize_default() {
+        let test_config = Config::default();
+        let json = serde_json::to_string(&test_config).unwrap();
+
+        let decoded: serde_json::Value = serde_json::from_str(&json).unwrap();
+        let dates = decoded["dates"].as_array().unwrap();
+        assert!(dates.is_empty());
+    }
+    #[test]
+    /// A properly made `Config` should serialize to a file properly.
+    fn serialize_default_to_file() {
+        setup();
+
+        let save_res = Config::save_default();
+        assert!(save_res.is_ok());
+        let json = std::fs::read_to_string(std::env::var(CONFIG_VAR).unwrap()).unwrap();
+
+        let decoded: serde_json::Value = serde_json::from_str(&json).unwrap();
+        let dates = decoded["dates"].as_array().unwrap();
+        assert!(dates.is_empty());
+
+        teardown();
+    }
+    #[test]
+    /// A properly made `Config` should also deserialize properly.
     fn deserialize() {
         let test_config = Config {
             dates: vec![TimeRangeMessage {
@@ -136,5 +149,29 @@ mod tests {
         let decoded_config_2: Config = serde_json::from_str(&json_2).unwrap();
         assert_eq!(test_config, decoded_config);
         assert_eq!(test_config_2, decoded_config_2);
+    }
+    #[test]
+    /// A properly made `Config` should also deserialize properly.
+    fn deserialize_from_file() {
+        setup();
+
+        let test_config = Config {
+            dates: vec![TimeRangeMessage {
+                message: "hai :3".to_string(),
+                time: TimeRange {
+                    day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                    month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                    year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                },
+            }],
+        };
+
+        let json = serde_json::to_string(&test_config).unwrap();
+        std::fs::write(std::env::var(CONFIG_VAR).unwrap(), &json).unwrap();
+
+        let decoded_config = Config::load().unwrap();
+        assert_eq!(test_config, decoded_config);
+
+        teardown();
     }
 }
