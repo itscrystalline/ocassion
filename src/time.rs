@@ -27,6 +27,45 @@ impl TimeRange {
     }
 }
 
+impl TimeRangeMessage {
+    /// Evaluates the contained `TimeRange` and if it is true, return the configured message.
+    /// Otherwise returns `None`.
+    ///
+    /// ```
+    /// use ocassion::config::TimeRangeMessage;
+    /// use chrono::{Local, DateTime};
+    ///
+    /// let now = Local::now().fixed_offset();
+    /// let range = TimeRangeMessage {
+    ///     message: "hewwo !".to_string(),
+    ///     time: TimeRange {
+    ///         day_of: Some(DayOf::Month(HashSet::from_iter(vec![now.day() as u8].into_iter()))),
+    ///         month: None,
+    ///         year: None,
+    ///     },
+    /// };
+    /// let result = range.try_message();
+    /// assert!(result.is_some());
+    /// assert_eq!(result.unwrap(), "hewwo !");
+    /// ```
+    pub fn try_message(&self) -> Option<String> {
+        if self.time.evaluate() {
+            Some(self.message.clone())
+        } else {
+            None
+        }
+    }
+
+    /// similar to `try_message`, but takes a fixed DateTime. for testing.
+    fn try_with_datetime(&self, dt: DateTime<FixedOffset>) -> Option<String> {
+        if self.time.eval_with_datetime(dt) {
+            Some(self.message.clone())
+        } else {
+            None
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use map_macro::hash_set;
