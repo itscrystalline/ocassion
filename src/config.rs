@@ -25,7 +25,7 @@ pub struct TimeRangeMessage {
 pub struct TimeRange {
     pub day_of: Option<DayOf>,
     pub month: Option<HashSet<Month>>,
-    pub year: Option<HashSet<u32>>,
+    pub year: Option<HashSet<i32>>,
 }
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DayOf {
