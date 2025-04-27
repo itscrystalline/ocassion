@@ -1,11 +1,11 @@
-use chrono::{DateTime, Datelike, FixedOffset};
-use dirs::data_dir;
+use chrono::{DateTime, Datelike, FixedOffset, Local};
 
-use crate::config::{Config, DayOf, TimeRange};
+use crate::config::{DayOf, TimeRange, TimeRangeMessage};
 
 impl TimeRange {
-    pub fn evaluate() {
-        todo!()
+    pub fn evaluate(&self) -> bool {
+        let now = Local::now().fixed_offset();
+        self.eval_with_datetime(now)
     }
 
     fn eval_with_datetime(&self, dt: DateTime<FixedOffset>) -> bool {
