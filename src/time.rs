@@ -32,7 +32,7 @@ mod test {
     use map_macro::hash_set;
 
     use crate::config::DayOf;
-    use chrono::{Local, Month, TimeZone, Weekday};
+    use chrono::{Local, TimeZone, Weekday};
 
     use super::*;
 
