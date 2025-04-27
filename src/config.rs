@@ -6,6 +6,7 @@ use std::{
 
 use chrono::{Month, Weekday};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 pub static CONFIG_VAR: &str = "OCASSION_CONFIG";
 pub static CONFIG_FILE_NAME: &str = "ocassions.json";
@@ -66,8 +67,8 @@ impl Config {
 
     fn save_default_to(path: &Path) -> Result<(), ConfigError> {
         let json = serde_json::to_value(Config::default())?;
-        let json_str = json.to_string();
-        std::fs::write(path, json_str)?;
+        let json_pretty = serde_json::to_string_pretty(&json)?;
+        std::fs::write(path, json_pretty)?;
         Ok(())
     }
 }
