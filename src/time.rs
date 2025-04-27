@@ -57,6 +57,7 @@ impl TimeRangeMessage {
     }
 
     /// similar to `try_message`, but takes a fixed DateTime. for testing.
+    #[cfg(test)]
     fn try_with_datetime(&self, dt: DateTime<FixedOffset>) -> Option<String> {
         if self.time.eval_with_datetime(dt) {
             Some(self.message.clone())
