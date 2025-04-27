@@ -166,4 +166,36 @@ mod tests {
             assert_eq!(test_config, decoded_config);
         });
     }
+    #[test]
+    /// A properly made `Config` should also deserialize properly.
+    fn deserialize_from_broken_file() {
+        with_var(|| {
+            let test_config = Config {
+                dates: vec![TimeRangeMessage {
+                    message: "hai :3".to_string(),
+                    time: TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    },
+                }],
+            };
+
+            let mut json = serde_json::to_string(&test_config).unwrap();
+            json.push_str("lalalalalalalal mreow :3");
+            std::fs::write(std::env::var(CONFIG_VAR).unwrap(), &json).unwrap();
+
+            let decoded_config = Config::load();
+            assert!(matches!(decoded_config, Err(ConfigError::Deserialize(_))));
+        });
+    }
+
+    #[test]
+    fn deserialize_unreadable() {
+        with_var(|| {
+            // no written config
+            let decoded_config = Config::load();
+            assert!(matches!(decoded_config, Err(ConfigError::Io(_))));
+        });
+    }
 }
