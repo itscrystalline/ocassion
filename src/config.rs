@@ -74,24 +74,20 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
+    use std::env::current_dir;
+
     use map_macro::hash_set;
 
     use super::*;
 
-    fn setup() {
-        let pwd = std::env::current_dir().unwrap();
-        let pwd = pwd.to_str().unwrap();
-        unsafe {
-            // SAFETY: this app is single threaded.
-            // https://doc.rust-lang.org/std/env/fn.set_var.html#safety
-            std::env::set_var(CONFIG_VAR, format!("{pwd}/{CONFIG_FILE_NAME}"));
-        }
-    }
-    fn teardown() {
-        let Ok(config_path) = std::env::var(CONFIG_VAR) else {
-            return;
-        };
-        _ = std::fs::remove_file(config_path);
+    fn with_var<F: FnOnce()>(run: F) {
+        let dir = current_dir().unwrap();
+        let dir = dir.to_string_lossy();
+        let file = format!("{dir}/{CONFIG_FILE_NAME}");
+        temp_env::with_var(CONFIG_VAR, Some(file.clone()), move || {
+            run();
+            _ = std::fs::remove_file(file);
+        });
     }
 
     #[test]
@@ -107,17 +103,15 @@ mod tests {
     #[test]
     /// A properly made `Config` should serialize to a file properly.
     fn serialize_default_to_file() {
-        setup();
+        with_var(|| {
+            let save_res = Config::save_default();
+            assert!(save_res.is_ok());
+            let json = std::fs::read_to_string(std::env::var(CONFIG_VAR).unwrap()).unwrap();
 
-        let save_res = Config::save_default();
-        assert!(save_res.is_ok());
-        let json = std::fs::read_to_string(std::env::var(CONFIG_VAR).unwrap()).unwrap();
-
-        let decoded: serde_json::Value = serde_json::from_str(&json).unwrap();
-        let dates = decoded["dates"].as_array().unwrap();
-        assert!(dates.is_empty());
-
-        teardown();
+            let decoded: serde_json::Value = serde_json::from_str(&json).unwrap();
+            let dates = decoded["dates"].as_array().unwrap();
+            assert!(dates.is_empty());
+        });
     }
     #[test]
     /// A properly made `Config` should also deserialize properly.
@@ -153,25 +147,55 @@ mod tests {
     #[test]
     /// A properly made `Config` should also deserialize properly.
     fn deserialize_from_file() {
-        setup();
+        with_var(|| {
+            let test_config = Config {
+                dates: vec![TimeRangeMessage {
+                    message: "hai :3".to_string(),
+                    time: TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    },
+                }],
+            };
 
-        let test_config = Config {
-            dates: vec![TimeRangeMessage {
-                message: "hai :3".to_string(),
-                time: TimeRange {
-                    day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
-                    month: Some(hash_set! { Month::January, Month::June, Month::July }),
-                    year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
-                },
-            }],
-        };
+            let json = serde_json::to_string(&test_config).unwrap();
+            std::fs::write(std::env::var(CONFIG_VAR).unwrap(), &json).unwrap();
 
-        let json = serde_json::to_string(&test_config).unwrap();
-        std::fs::write(std::env::var(CONFIG_VAR).unwrap(), &json).unwrap();
+            let decoded_config = Config::load().unwrap();
+            assert_eq!(test_config, decoded_config);
+        });
+    }
+    #[test]
+    /// A properly made `Config` should also deserialize properly.
+    fn deserialize_from_broken_file() {
+        with_var(|| {
+            let test_config = Config {
+                dates: vec![TimeRangeMessage {
+                    message: "hai :3".to_string(),
+                    time: TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    },
+                }],
+            };
 
-        let decoded_config = Config::load().unwrap();
-        assert_eq!(test_config, decoded_config);
+            let mut json = serde_json::to_string(&test_config).unwrap();
+            json.push_str("lalalalalalalal mreow :3");
+            std::fs::write(std::env::var(CONFIG_VAR).unwrap(), &json).unwrap();
 
-        teardown();
+            let decoded_config = Config::load();
+            assert!(matches!(decoded_config, Err(ConfigError::Deserialize(_))));
+        });
+    }
+
+    #[test]
+    fn deserialize_unreadable() {
+        with_var(|| {
+            // no written config
+            let decoded_config = Config::load();
+            assert!(matches!(decoded_config, Err(ConfigError::Io(_))));
+        });
     }
 }
