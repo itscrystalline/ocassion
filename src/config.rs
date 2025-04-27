@@ -79,12 +79,10 @@ mod tests {
     use super::*;
 
     fn setup() {
-        let pwd = std::env::current_dir().unwrap();
-        let pwd = pwd.to_str().unwrap();
         unsafe {
             // SAFETY: this app is single threaded.
             // https://doc.rust-lang.org/std/env/fn.set_var.html#safety
-            std::env::set_var(CONFIG_VAR, format!("{pwd}/{CONFIG_FILE_NAME}"));
+            std::env::set_var(CONFIG_VAR, format!("/tmp/{CONFIG_FILE_NAME}"));
         }
     }
     fn teardown() {
