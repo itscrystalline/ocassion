@@ -84,6 +84,24 @@ impl Config {
         std::fs::write(path, json_pretty)?;
         Ok(())
     }
+
+    #[cfg(test)]
+    fn save_this_to(&self, path: &Path) -> Result<(), ConfigError> {
+        let json = serde_json::to_string_pretty(self)?;
+        std::fs::write(path, json)?;
+        Ok(())
+    }
+    #[cfg(test)]
+    fn save_this(&self) -> Result<(), ConfigError> {
+        let file_path_str = std::env::var(CONFIG_VAR).unwrap_or(format!(
+            "{}/{}",
+            dirs::config_dir()
+                .ok_or(ConfigError::UndeterminableConfigLocation)?
+                .to_string_lossy(),
+            CONFIG_FILE_NAME
+        ));
+        self.save_this_to(&PathBuf::from(&file_path_str))
+    }
 }
 
 #[cfg(test)]
@@ -210,6 +228,37 @@ mod unit_tests {
             // no written config
             let decoded_config = Config::load();
             assert!(matches!(decoded_config, Err(ConfigError::Io(_))));
+        });
+    }
+
+    #[test]
+    fn read_default() {
+        with_var(|| {
+            let config = Config::load_or_default();
+            assert!(config.is_ok());
+            let config = config.unwrap();
+            assert!(config.dates.is_empty());
+        });
+    }
+    #[test]
+    fn read_existing() {
+        with_var(|| {
+            let test_config = Config {
+                dates: vec![TimeRangeMessage {
+                    message: "hai :3".to_string(),
+                    time: TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    },
+                }],
+            };
+            test_config.save_this().unwrap();
+
+            let read = Config::load_or_default();
+            assert!(read.is_ok());
+            let read = read.unwrap();
+            assert_eq!(read, test_config);
         });
     }
 }
