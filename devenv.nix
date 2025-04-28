@@ -4,9 +4,7 @@
   config,
   inputs,
   ...
-}: let
-  runBeforeTest = tasks: builtins.mapAttrs (name: value: value // {before = ["ocassion:test_full"];}) tasks;
-in {
+}: {
   # https://devenv.sh/basics/
   env.CARGO_TERM_COLOR = "always";
 
@@ -39,15 +37,12 @@ in {
   # '';
 
   # https://devenv.sh/tasks/
-  tasks =
-    (runBeforeTest {
-      "ocassion:check".exec = "cargo check";
-      "ocassion:lint".exec = "cargo clippy";
-      "ocassion:test".exec = "cargo test";
-    })
-    // {
-      "ocassion:test_full".exec = "${pkgs.cargo-tarpaulin}/bin/cargo-tarpaulin --color always --verbose --all-features --workspace --timeout 120 --out xml";
-    };
+  tasks = {
+    "ocassion:check".exec = "cargo check";
+    "ocassion:lint".exec = "cargo clippy";
+    "ocassion:test".exec = "cargo test";
+    "ocassion:coverage".exec = "${pkgs.cargo-tarpaulin}/bin/cargo-tarpaulin --color always --verbose --all-features --workspace --timeout 120 --out xml";
+  };
 
   # https://devenv.sh/tests/
   enterTest = ''

@@ -47,9 +47,11 @@ jobs:
       - name: Install devenv.sh
         run: nix profile install nixpkgs#devenv
 
-      - name: Test code & generate coverage report
-        run: devenv tasks run ocassion:test_full
+      - name: Test
+        run: devenv tasks run ocassion:test
+      - name: Generate coverage report
+        run: devenv tasks run ocassion:coverage
 
-      - name: Coveralls
+      - name: Upload coverage report 
         uses: coverallsapp/github-action@v2
 
