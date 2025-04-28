@@ -32,8 +32,9 @@ impl TimeRangeMessage {
     /// Otherwise returns `None`.
     ///
     /// ```
-    /// use ocassion::config::TimeRangeMessage;
-    /// use chrono::{Local, DateTime};
+    /// use ocassion::config::{TimeRangeMessage, TimeRange, DayOf};
+    /// use chrono::{Local, DateTime, Datelike};
+    /// use std::collections::HashSet;
     ///
     /// let now = Local::now().fixed_offset();
     /// let range = TimeRangeMessage {
@@ -57,6 +58,7 @@ impl TimeRangeMessage {
     }
 
     /// similar to `try_message`, but takes a fixed DateTime. for testing.
+    #[cfg(test)]
     fn try_with_datetime(&self, dt: DateTime<FixedOffset>) -> Option<String> {
         if self.time.eval_with_datetime(dt) {
             Some(self.message.clone())
@@ -67,7 +69,7 @@ impl TimeRangeMessage {
 }
 
 #[cfg(test)]
-mod test {
+mod unit_tests {
     use map_macro::hash_set;
 
     use crate::config::DayOf;
