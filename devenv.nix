@@ -46,7 +46,7 @@ in {
       "ocassion:test".exec = "cargo test";
     })
     // {
-      "ocassion:test_full".exec = "cargo tarpaulin --color always --verbose --all-features --workspace --timeout 120 --out xml";
+      "ocassion:test_full".exec = "${pkgs.cargo-tarpaulin}/bin/cargo-tarpaulin --color always --verbose --all-features --workspace --timeout 120 --out xml";
     };
 
   # https://devenv.sh/tests/
