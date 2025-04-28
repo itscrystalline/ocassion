@@ -5,3 +5,6 @@
 
 This program simply shows one (or many) messages when run during a configured timeframe. Useful to have in your status bar for example.
 
+## Demonstration
+
+[![asciicast](https://asciinema.org/a/E7idEoQNMf1mWaOy7wMw226tC.svg)](https://asciinema.org/a/E7idEoQNMf1mWaOy7wMw226tC)
