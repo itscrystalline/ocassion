@@ -11,7 +11,8 @@ This program simply shows one (or many) messages when run during a configured ti
 
 ## Installation
 
-Currently, the only to install is with `cargo install`. (TBA: grabbing from github releases or `cargo binstall`)
+Currently, you can grab the [latest release](https://github.com/itscrystalline/ocassion/releases/latest).
+You can also run `cargo install ocassion` or `cargo binstall ocassion` and it will be avaliable in your `PATH`.
 
 ## Configuration
 
