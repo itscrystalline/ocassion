@@ -73,7 +73,7 @@ impl Config {
 }
 
 #[cfg(test)]
-mod tests {
+mod unit_tests {
     use std::env::current_dir;
 
     use map_macro::hash_set;

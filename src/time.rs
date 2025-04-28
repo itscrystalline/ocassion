@@ -68,7 +68,7 @@ impl TimeRangeMessage {
 }
 
 #[cfg(test)]
-mod test {
+mod unit_tests {
     use map_macro::hash_set;
 
     use crate::config::DayOf;
