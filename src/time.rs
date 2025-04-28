@@ -32,8 +32,9 @@ impl TimeRangeMessage {
     /// Otherwise returns `None`.
     ///
     /// ```
-    /// use ocassion::config::TimeRangeMessage;
-    /// use chrono::{Local, DateTime};
+    /// use ocassion::config::{TimeRangeMessage, TimeRange, DayOf};
+    /// use chrono::{Local, DateTime, Datelike};
+    /// use std::collections::HashSet;
     ///
     /// let now = Local::now().fixed_offset();
     /// let range = TimeRangeMessage {
