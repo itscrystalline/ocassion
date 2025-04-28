@@ -52,6 +52,7 @@ jobs:
         with:
           executable-name: ocassion 
           target: ${{ matrix.platform.target }}
+          changes-file: ""
 
   crates_io:
     runs-on: ubuntu-latest
