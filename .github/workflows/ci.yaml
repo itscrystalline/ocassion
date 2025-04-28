@@ -33,7 +33,7 @@ jobs:
       - name: Install devenv.sh
         run: nix profile install nixpkgs#devenv
 
-      - name: Check code
+      - name: Lint code
         run: devenv tasks run ocassion:lint
 
   test_coverage:
@@ -47,6 +47,9 @@ jobs:
       - name: Install devenv.sh
         run: nix profile install nixpkgs#devenv
 
-      - name: Check code
-        run: devenv test
+      - name: Test code & generate coverage report
+        run: devenv tasks run ocassion:test_full
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
 
