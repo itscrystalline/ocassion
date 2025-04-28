@@ -9,7 +9,7 @@ on:
 
 jobs:
   github-releases:
-    name: Release - ${{ matrix.platform.release_for }}
+    name: Release - ${{ matrix.platform.release-for }}
     strategy:
       matrix:
         platform:
