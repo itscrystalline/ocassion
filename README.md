@@ -69,3 +69,13 @@ ${custom.ocassion}
 ```
 You would get something like this.
 ![starship_result](https://github.com/user-attachments/assets/138cc981-30f7-43ac-b33b-34339c2d7445)
+
+## Development
+
+A Development environment can be set up automatically with [`devenv`](https://devenv.sh).
+
+Otherwise, Install Rust 1.86.0 from https://rustup.rs, and [`cargo-tarpaulin`](https://github.com/xd009642/tarpaulin) for code coverage checking.
+
+To run tests and generate a code coverage report, run `devenv test -d` (omit the `-d` flag if you wanna rebuild the environment everytime), or without devenv, run `cargo tarpaulin --color always --skip-clean` (or without `--skip-clean` to rebuild everything everytime).
+
+Otherwise, run the standard `cargo check`, `cargo clippy` and `cargo test` for checking, linting, and testing (without coverage).
