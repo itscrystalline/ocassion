@@ -1,6 +1,7 @@
 use crate::errors::ConfigError;
 use std::{
     collections::HashSet,
+    io::ErrorKind,
     path::{Path, PathBuf},
 };
 
@@ -36,7 +37,20 @@ pub enum DayOf {
 }
 
 impl Config {
-    pub fn load() -> Result<Config, ConfigError> {
+    pub fn load_or_default() -> Result<Config, ConfigError> {
+        match Config::load() {
+            Ok(conf) => Ok(conf),
+            Err(ConfigError::Io(err)) if err.kind() == ErrorKind::NotFound => {
+                match Config::save_default() {
+                    Ok(()) => Config::load(),
+                    Err(e) => Err(e),
+                }
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    fn load() -> Result<Config, ConfigError> {
         let file_path_str = std::env::var(CONFIG_VAR).unwrap_or(format!(
             "{}/{}",
             dirs::config_dir()
@@ -53,7 +67,7 @@ impl Config {
         Ok(serde_json::from_str(&contents)?)
     }
 
-    pub fn save_default() -> Result<(), ConfigError> {
+    fn save_default() -> Result<(), ConfigError> {
         let file_path_str = std::env::var(CONFIG_VAR).unwrap_or(format!(
             "{}/{}",
             dirs::config_dir()
