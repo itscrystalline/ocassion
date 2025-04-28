@@ -4,9 +4,11 @@
   config,
   inputs,
   ...
-}: {
+}: let
+  runBeforeTest = tasks: builtins.mapAttrs (name: value: value // {before = ["devenv:enterTest"];}) tasks;
+in {
   # https://devenv.sh/basics/
-  # env.GREET = "devenv";
+  env.CARGO_TERM_COLOR = "always";
 
   # https://devenv.sh/packages/
 
@@ -29,23 +31,24 @@
   # services.postgres.enable = true;
 
   # https://devenv.sh/scripts/
-  # scripts.hello.exec = ''
-  #   echo hello from $GREET
-  # '';
+  scripts.test-quick.exec = ''
+    cargo tarpaulin --color always --skip-clean
+  '';
   #
   # enterShell = ''
   # '';
 
   # https://devenv.sh/tasks/
-  # tasks = {
-  #   "myproj:setup".exec = "mytool build";
-  #   "devenv:enterShell".after = [ "myproj:setup" ];
-  # };
+  tasks = runBeforeTest {
+    "ocassion:check".exec = "cargo check";
+    "ocassion:lint".exec = "cargo clippy";
+    "ocassion:test".exec = "cargo test";
+  };
 
   # https://devenv.sh/tests/
   enterTest = ''
-    echo "Running tests"
-    cargo tarpaulin --color always --skip-clean
+    echo "Running tests & grabbing test coverage"
+    cargo tarpaulin --color always
   '';
 
   # https://devenv.sh/pre-commit-hooks/
