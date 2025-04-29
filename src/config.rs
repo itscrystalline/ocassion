@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 pub static CONFIG_VAR: &str = "OCCASION_CONFIG";
 pub static CONFIG_FILE_NAME: &str = "occasions.json";
+pub static SCHEMA: &str = "https://raw.githubusercontent.com/itscrystalline/occasion/refs/heads/schema/ocassions.schema.json";
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct Config {
@@ -79,8 +80,10 @@ impl Config {
     }
 
     fn save_default_to(path: &Path) -> Result<(), ConfigError> {
-        let json = serde_json::to_value(Config::default())?;
-        let json_pretty = serde_json::to_string_pretty(&json)?;
+        let mut json = serde_json::to_value(Config::default())?;
+        let map_json = json.as_object_mut().ok_or(ConfigError::Unknown)?;
+        map_json.insert("$schema".into(), SCHEMA.into());
+        let json_pretty = serde_json::to_string_pretty(map_json)?;
         std::fs::write(path, json_pretty)?;
         Ok(())
     }
@@ -142,7 +145,9 @@ mod unit_tests {
 
             let decoded: serde_json::Value = serde_json::from_str(&json).unwrap();
             let dates = decoded["dates"].as_array().unwrap();
+            let schema_string = decoded["$schema"].as_str().unwrap();
             assert!(dates.is_empty());
+            assert_eq!(schema_string, SCHEMA);
         });
     }
     #[test]
