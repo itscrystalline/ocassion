@@ -14,6 +14,44 @@ This program simply shows one (or many) messages when run during a configured ti
 Currently, you can grab the [latest release](https://github.com/itscrystalline/occasion/releases/latest).
 You can also run `cargo install occasion` or `cargo binstall occasion` and it will be avaliable in your `PATH`.
 
+### Nix (with flakes)
+
+Alternatively, if you use Nix, `occasion` has a Nix flake and a home-manager module for you to use.
+In your `flake.nix`, add this to your `inputs`:
+```nix
+{
+    inputs = {
+        # .. snip ..
+        occasion.url = "github:itscrystalline/occasion";
+    };
+    # ..
+}
+```
+This flake contains two packages: `occasion`, which is the latest release on Github Releases, and `occasion-latest`, which builds from the latest commit on the `main` branch. They are avaliable with `inputs.occasion.packages.${pkgs.system}.occasion` and `inputs.occasion.packages.${pkgs.system}.occasion-latest` respectively.
+
+To use with home-manager, import the `occasion.homeManagerModule` in your home-manager imports, you will then have access to `programs.occasion`. For example:
+```nix
+programs.occasion = {
+  enable = true;
+  # package = inputs.occasion.packages.${pkgs.system}.occasion;
+  settings = {
+    dates = [
+      {
+        message = "test";
+        time = {
+          day_of = {
+            week = ["Tuesday"];
+          };
+        };
+      }
+    ];
+    multiple_behavior = {
+      all = {seperator = "";};
+    };
+  };
+};
+```
+
 ## Configuration
 
 When you run `occasion` for the first time, a default config file is generated for you at `CONFIG_DIR/occasions.json`.

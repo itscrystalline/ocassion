@@ -14,6 +14,7 @@
   # languages.rust.enable = true;
   packages = with pkgs; [
     cargo-tarpaulin
+    cargo-bloat
     irust
   ];
 
