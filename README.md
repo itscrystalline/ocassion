@@ -1,7 +1,7 @@
-# ocassion
+# occasion
 
-[![CI](https://github.com/itscrystalline/ocassion/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/itscrystalline/ocassion/actions/workflows/ci.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/itscrystalline/ocassion/badge.svg)](https://coveralls.io/github/itscrystalline/ocassion)
+[![CI](https://github.com/itscrystalline/occasion/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/itscrystalline/occasion/actions/workflows/ci.yaml)
+[![Coverage Status](https://coveralls.io/repos/github/itscrystalline/occasion/badge.svg)](https://coveralls.io/github/itscrystalline/occasion)
 
 This program simply shows one (or many) messages when run during a configured timeframe. Useful to have in your status bar for example.
 
@@ -11,12 +11,12 @@ This program simply shows one (or many) messages when run during a configured ti
 
 ## Installation
 
-Currently, you can grab the [latest release](https://github.com/itscrystalline/ocassion/releases/latest).
-You can also run `cargo install ocassion` or `cargo binstall ocassion` and it will be avaliable in your `PATH`.
+Currently, you can grab the [latest release](https://github.com/itscrystalline/occasion/releases/latest).
+You can also run `cargo install occasion` or `cargo binstall occasion` and it will be avaliable in your `PATH`.
 
 ## Configuration
 
-When you run `ocassion` for the first time, a default config file is generated for you at `CONFIG_DIR/ocassions.json`.
+When you run `occasion` for the first time, a default config file is generated for you at `CONFIG_DIR/occasions.json`.
 The value of `CONFIG_DIR` depends on the OS [(source)](https://docs.rs/dirs/latest/dirs/fn.config_dir.html):
 | Platform | Value                                 | Example                                    |
 |----------|---------------------------------------|--------------------------------------------|
@@ -24,7 +24,7 @@ The value of `CONFIG_DIR` depends on the OS [(source)](https://docs.rs/dirs/late
 | macOS    | `$HOME/Library/Application Support`   | `/Users/Alice/Library/Application Support` |
 | Windows  | `{FOLDERID_RoamingAppData}`           | `C:\Users\Alice\AppData\Roaming`           |
 
-The config file is written in JSON, a schema is in the works (see [#2](https://github.com/users/itscrystalline/projects/3/views/1?visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C187565926%2C187565928%2C187565927%2C%22Labels%22%2C%22Milestone%22%5D&pane=issue&itemId=108037405&issue=itscrystalline%7Cocassion%7C2))
+The config file is written in JSON, a schema is in the works (see [#2](https://github.com/users/itscrystalline/projects/3/views/1?visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C187565926%2C187565928%2C187565927%2C%22Labels%22%2C%22Milestone%22%5D&pane=issue&itemId=108037405&issue=itscrystalline%7Coccasion%7C2))
 
 in the meantime, this is all the possible values as of 0.1:
 ```json
@@ -54,8 +54,8 @@ You would probably want to use this in conjuction with another tool that can sho
 
 For example, in Starship, you can define a `custom` block in your `~/.config/starship.toml`:
 ```toml
-[custom.ocassion]
-command = "ocassion"
+[custom.occasion]
+command = "occasion"
 when = true
 style = "fg:blue bg:black"
 format = '[ $output ]($style)'
@@ -64,7 +64,7 @@ then, add it to your `format`:
 ```toml
 format = """
 .. snip ..
-${custom.ocassion}
+${custom.occasion}
 .. snip ..
 """
 ```

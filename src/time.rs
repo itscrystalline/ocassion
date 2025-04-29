@@ -32,7 +32,7 @@ impl TimeRangeMessage {
     /// Otherwise returns `None`.
     ///
     /// ```
-    /// use ocassion::config::{TimeRangeMessage, TimeRange, DayOf};
+    /// use occasion::config::{TimeRangeMessage, TimeRange, DayOf};
     /// use chrono::{Local, DateTime, Datelike};
     /// use std::collections::HashSet;
     ///

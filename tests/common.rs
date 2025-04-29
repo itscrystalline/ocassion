@@ -1,6 +1,6 @@
 use chrono::{DateTime, FixedOffset, Local, TimeZone};
-use ocassion::{
-    config::{Config, CONFIG_FILE_NAME, CONFIG_VAR},
+use occasion::{
+    config::{CONFIG_FILE_NAME, CONFIG_VAR, Config},
     errors::ConfigError,
 };
 use std::env::current_dir;

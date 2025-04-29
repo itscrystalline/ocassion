@@ -38,10 +38,10 @@
 
   # https://devenv.sh/tasks/
   tasks = {
-    "ocassion:check".exec = "cargo check";
-    "ocassion:lint".exec = "cargo clippy";
-    "ocassion:test".exec = "cargo test";
-    "ocassion:coverage".exec = "${pkgs.cargo-tarpaulin}/bin/cargo-tarpaulin --color always --verbose --all-features --workspace --timeout 120 --out xml";
+    "occasion:check".exec = "cargo check";
+    "occasion:lint".exec = "cargo clippy";
+    "occasion:test".exec = "cargo test";
+    "occasion:coverage".exec = "${pkgs.cargo-tarpaulin}/bin/cargo-tarpaulin --color always --verbose --all-features --workspace --timeout 120 --out xml";
   };
 
   # https://devenv.sh/tests/

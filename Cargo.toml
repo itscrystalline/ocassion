@@ -1,8 +1,8 @@
 [package]
-name = "ocassion"
+name = "occasion"
 description = "Shows one (or many) messages when run during a configured timeframe. Useful to have in your status bar for example."
 readme = "README.md"
-repository = "https://github.com/itscrystalline/ocassion"
+repository = "https://github.com/itscrystalline/occasion"
 version = "0.1.0"
 edition = "2024"
 license = "Unlicense"

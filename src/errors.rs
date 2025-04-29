@@ -4,7 +4,7 @@ use thiserror::Error;
 pub enum ConfigError {
     #[error("malformed config file")]
     Malformed,
-    #[error("cannot determine config dir, pass $OCASSION_CONFIG directly")]
+    #[error("cannot determine config dir, pass $OCCASION_CONFIG directly")]
     UndeterminableConfigLocation,
     #[error("i/o error: {0}")]
     Io(#[from] std::io::Error),
