@@ -15,7 +15,10 @@
       };
       lib = pkgs.lib;
       buildRustPackage = pkgs.rustPackages.rustPlatform.buildRustPackage;
-      fetch = rev: hash:
+      fetch = {
+        rev,
+        hash,
+      }:
         pkgs.fetchFromGitHub {
           owner = "itscrystalline";
           repo = "occasion";
@@ -43,7 +46,13 @@
         });
     in rec {
       packages.occasion-latest = package ./. "0.2.0";
-      packages.occasion = package (fetch "5808d9283909eb79a18747995539edfac9eba12f" "sha256-h5uZ/vht39qPLaSlhfUp20uJgivUsKWOmQLdmj402HU=") "0.1.0";
+      packages.occasion = package (fetch {
+        rev = "5808d9283909eb79a18747995539edfac9eba12f";
+        hash = "sha256-h5uZ/vht39qPLaSlhfUp20uJgivUsKWOmQLdmj402HU=";
+      }) "0.1.0";
       packages.default = packages.occasion-latest;
+    })
+    // flake-utils.lib.eachDefaultSystemPassThrough (system: {
+      homeManagerModule = import ./module.nix {inherit (self.packages.${system}) occasion;};
     });
 }
