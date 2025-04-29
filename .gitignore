@@ -12,3 +12,5 @@ devenv.local.nix
 # Added by cargo
 
 /target
+
+result*
