@@ -15,6 +15,7 @@ pub static SCHEMA: &str = "https://raw.githubusercontent.com/itscrystalline/occa
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct Config {
     pub dates: Vec<TimeRangeMessage>,
+    #[serde(default)]
     pub multiple_behavior: MultipleBehavior,
 }
 
@@ -44,7 +45,10 @@ pub enum MultipleBehavior {
     #[serde(rename = "last")]
     Last,
     #[serde(rename = "all")]
-    All { seperator: String },
+    All {
+        #[serde(default)]
+        seperator: String,
+    },
     #[serde(rename = "random")]
     Random,
 }
