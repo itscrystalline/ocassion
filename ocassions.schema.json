@@ -20,7 +20,7 @@
             "required": [],
             "properties": {
               "day_of": {
-                "description": "The day to match. Can be *either* a day of the week *or* a day of the month. Leaving this empty means it will match for exery day.",
+                "description": "The day to match. Can be *either* a day of the week *or* a day of the month. Leaving this empty means it will match for every day.",
                 "properties": {
                   "week": {
                     "description": "The day of the week this pattern will match. Accepts either the full day name, like 'Tuesday', or a shortened form, like 'Tue'. Case-insensitive.",
