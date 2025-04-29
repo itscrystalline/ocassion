@@ -206,7 +206,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ocassion"
+name = "occasion"
 version = "0.1.0"
 dependencies = [
  "chrono",

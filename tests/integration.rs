@@ -1,7 +1,7 @@
 use chrono::Month;
 use chrono::{Datelike, Local};
 use map_macro::hash_set;
-use ocassion::config::{Config, DayOf, TimeRange, TimeRangeMessage};
+use occasion::config::{Config, DayOf, TimeRange, TimeRangeMessage};
 
 mod common;
 
@@ -9,7 +9,7 @@ mod common;
 fn integration_no_config() {
     common::with_config_var(|| {
         let empty = Config::load_or_default().unwrap();
-        let res = ocassion::output_of(empty);
+        let res = occasion::output_of(empty);
         assert!(res.is_empty())
     });
 }
@@ -42,7 +42,7 @@ fn integration_with_config_multiple() {
 
         let config = Config::load_or_default().unwrap();
 
-        let res = ocassion::output_of(config);
+        let res = occasion::output_of(config);
         assert_eq!(res, "haihewwo :3");
     });
 }
@@ -65,7 +65,7 @@ fn integration_with_config_single() {
 
         let config = Config::load_or_default().unwrap();
 
-        let res = ocassion::output_of(config);
+        let res = occasion::output_of(config);
         assert_eq!(res, "hai");
     });
 }
@@ -88,7 +88,7 @@ fn integration_with_config_emoji() {
 
         let config = Config::load_or_default().unwrap();
 
-        let res = ocassion::output_of(config);
+        let res = occasion::output_of(config);
         assert_eq!(res, "🐈");
     });
 }
