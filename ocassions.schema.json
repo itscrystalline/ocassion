@@ -1,4 +1,89 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/"
+  "$id": "https://raw.githubusercontent.com/itscrystalline/occasion/refs/heads/schema/ocassions.schema.json",
+  "title": "The occasion configuration file.",
+  "type": "object",
+  "properties": {
+    "dates": {
+      "description": "A pair of a date pattern to match, and a message to show once the current date at runtime matches the date pattern.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "messsage": {
+            "description": "The message to show when the configured date pattern matches.",
+            "type": "string"
+          },
+          "time": {
+            "description": "The date pattern to match.",
+            "type": "object",
+            "required": [],
+            "properties": {
+              "day_of": {
+                "description": "The day to match. Can be *either* a day of the week *or* a day of the month. Leaving this empty means it will match for exery day.",
+                "properties": {
+                  "week": {
+                    "description": "The day of the week this pattern will match. Accepts either the full day name, like 'Tuesday', or a shortened form, like 'Tue'. Case-insensitive.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "uniqueItems": true
+                  },
+                  "month": {
+                    "description": "The day of the month this pattern will match. Accepts a number from 1-31.",
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 31
+                    },
+                    "uniqueItems": true
+                  }
+                },
+                "oneOf": [
+                  {
+                    "required": [
+                      "week"
+                    ],
+                    "not": {
+                      "required": [
+                        "month"
+                      ]
+                    }
+                  },
+                  {
+                    "required": [
+                      "month"
+                    ],
+                    "not": {
+                      "required": [
+                        "week"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "month": {
+                "description": "The month to match. Accepts the full month name, like 'April', or a shortened name, like 'Apr'. Case-insensitive.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "uniqueItems": true
+                }
+              },
+              "year": {
+                "description": "The year (in your system's default locale's year format, usually AD) to match. Accepts a positive number.",
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
