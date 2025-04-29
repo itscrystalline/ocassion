@@ -24,27 +24,7 @@ The value of `CONFIG_DIR` depends on the OS [(source)](https://docs.rs/dirs/late
 | macOS    | `$HOME/Library/Application Support`   | `/Users/Alice/Library/Application Support` |
 | Windows  | `{FOLDERID_RoamingAppData}`           | `C:\Users\Alice\AppData\Roaming`           |
 
-The config file is written in JSON, a schema is in the works (see [#2](https://github.com/users/itscrystalline/projects/3/views/1?visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C187565926%2C187565928%2C187565927%2C%22Labels%22%2C%22Milestone%22%5D&pane=issue&itemId=108037405&issue=itscrystalline%7Coccasion%7C2))
-
-in the meantime, this is all the possible values as of 0.1:
-```json
-{
-    "dates": [
-        {
-            "message": "", // String to print if the date matches time
-            "time": [
-                "day_of": {
-                    // either "week" or "month"
-                    "week": [] // List of weekdays, e.g "Mon", "Fri" or "Monday", "Friday"
-                    "month": [] // List of days in the month, e.g. 1, 3, 31
-                },
-                "month": [], // List of month names, e.g "April", "June"
-                "year": [] // List of year numbers, in AD. e.g. 2025, 2026
-            ]
-        },...
-    ]
-}
-```
+The config file is written in JSON, a schema is automatically added to a default config. The schema lives at `occasions.schema.json` at the root of the repository. 
 
 ## Usage
 
