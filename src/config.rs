@@ -181,6 +181,7 @@ mod unit_tests {
                     year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                 },
             }],
+            multiple_behavior: MultipleBehavior::default(),
         };
         let test_config_2 = Config {
             dates: vec![TimeRangeMessage {
@@ -191,6 +192,7 @@ mod unit_tests {
                     year: None,
                 },
             }],
+            multiple_behavior: MultipleBehavior::First,
         };
         let json = serde_json::to_string(&test_config).unwrap();
         let json_2 = serde_json::to_string(&test_config_2).unwrap();
@@ -213,6 +215,7 @@ mod unit_tests {
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     },
                 }],
+                multiple_behavior: MultipleBehavior::default(),
             };
 
             let json = serde_json::to_string(&test_config).unwrap();
@@ -235,6 +238,7 @@ mod unit_tests {
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     },
                 }],
+                multiple_behavior: MultipleBehavior::default(),
             };
 
             let mut json = serde_json::to_string(&test_config).unwrap();
@@ -276,6 +280,7 @@ mod unit_tests {
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     },
                 }],
+                multiple_behavior: MultipleBehavior::default(),
             };
             test_config.save_this().unwrap();
 
