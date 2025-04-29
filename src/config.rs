@@ -15,6 +15,8 @@ pub static SCHEMA: &str = "https://raw.githubusercontent.com/itscrystalline/occa
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct Config {
     pub dates: Vec<TimeRangeMessage>,
+    #[serde(default)]
+    pub multiple_behavior: MultipleBehavior,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
@@ -35,6 +37,27 @@ pub enum DayOf {
     Week(HashSet<Weekday>),
     #[serde(rename = "month")]
     Month(HashSet<u8>),
+}
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub enum MultipleBehavior {
+    #[serde(rename = "first")]
+    First,
+    #[serde(rename = "last")]
+    Last,
+    #[serde(rename = "all")]
+    All {
+        #[serde(default)]
+        seperator: String,
+    },
+    #[serde(rename = "random")]
+    Random,
+}
+impl Default for MultipleBehavior {
+    fn default() -> Self {
+        Self::All {
+            seperator: "".to_string(),
+        }
+    }
 }
 
 impl Config {
@@ -162,6 +185,7 @@ mod unit_tests {
                     year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                 },
             }],
+            multiple_behavior: MultipleBehavior::default(),
         };
         let test_config_2 = Config {
             dates: vec![TimeRangeMessage {
@@ -172,6 +196,7 @@ mod unit_tests {
                     year: None,
                 },
             }],
+            multiple_behavior: MultipleBehavior::First,
         };
         let json = serde_json::to_string(&test_config).unwrap();
         let json_2 = serde_json::to_string(&test_config_2).unwrap();
@@ -194,6 +219,7 @@ mod unit_tests {
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     },
                 }],
+                multiple_behavior: MultipleBehavior::default(),
             };
 
             let json = serde_json::to_string(&test_config).unwrap();
@@ -216,6 +242,7 @@ mod unit_tests {
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     },
                 }],
+                multiple_behavior: MultipleBehavior::default(),
             };
 
             let mut json = serde_json::to_string(&test_config).unwrap();
@@ -257,6 +284,7 @@ mod unit_tests {
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     },
                 }],
+                multiple_behavior: MultipleBehavior::default(),
             };
             test_config.save_this().unwrap();
 
