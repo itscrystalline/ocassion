@@ -10,6 +10,8 @@ categories = ["command-line-utilities"]
 
 [dependencies]
 chrono = { version = "0.4.40", features = ["serde"] }
+clap = { version = "4.5.37", features = ["derive"] }
+clap_derive = { version = "4.0.0-rc.1" }
 colored = "3"
 dirs = "6.0.0"
 fastrand = "2.3.0"
