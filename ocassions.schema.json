@@ -10,7 +10,7 @@
       "items": {
         "type": "object",
         "properties": {
-          "messsage": {
+          "message": {
             "description": "The message to show when the configured date pattern matches.",
             "type": "string"
           },
