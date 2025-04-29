@@ -15,6 +15,7 @@ pub static SCHEMA: &str = "https://raw.githubusercontent.com/itscrystalline/occa
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct Config {
     pub dates: Vec<TimeRangeMessage>,
+    pub multiple_behavior: MultipleBehavior,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
@@ -35,6 +36,24 @@ pub enum DayOf {
     Week(HashSet<Weekday>),
     #[serde(rename = "month")]
     Month(HashSet<u8>),
+}
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub enum MultipleBehavior {
+    #[serde(rename = "first")]
+    First,
+    #[serde(rename = "last")]
+    Last,
+    #[serde(rename = "all")]
+    All { seperator: String },
+    #[serde(rename = "random")]
+    Random,
+}
+impl Default for MultipleBehavior {
+    fn default() -> Self {
+        Self::All {
+            seperator: "".to_string(),
+        }
+    }
 }
 
 impl Config {
