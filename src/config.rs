@@ -8,8 +8,8 @@ use std::{
 use chrono::{Month, Weekday};
 use serde::{Deserialize, Serialize};
 
-pub static CONFIG_VAR: &str = "OCASSION_CONFIG";
-pub static CONFIG_FILE_NAME: &str = "ocassions.json";
+pub static CONFIG_VAR: &str = "OCCASION_CONFIG";
+pub static CONFIG_FILE_NAME: &str = "occasions.json";
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct Config {
