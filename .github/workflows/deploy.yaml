@@ -53,7 +53,7 @@ jobs:
       - name: Publish artifacts and release
         uses: houseabsolute/actions-rust-release@v0
         with:
-          executable-name: ocassion 
+          executable-name: occasion 
           target: ${{ matrix.platform.target }}
           changes-file: ""
 

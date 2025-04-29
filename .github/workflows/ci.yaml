@@ -20,7 +20,7 @@ jobs:
         run: nix profile install nixpkgs#devenv
 
       - name: Check code
-        run: devenv tasks run ocassion:check
+        run: devenv tasks run occasion:check
 
   lint:
     runs-on: ubuntu-latest
@@ -34,7 +34,7 @@ jobs:
         run: nix profile install nixpkgs#devenv
 
       - name: Lint code
-        run: devenv tasks run ocassion:lint
+        run: devenv tasks run occasion:lint
 
   test_coverage:
     runs-on: ubuntu-latest
@@ -48,9 +48,9 @@ jobs:
         run: nix profile install nixpkgs#devenv
 
       - name: Test
-        run: devenv tasks run ocassion:test
+        run: devenv tasks run occasion:test
       - name: Generate coverage report
-        run: devenv tasks run ocassion:coverage
+        run: devenv tasks run occasion:coverage
 
       - name: Upload coverage report 
         uses: coverallsapp/github-action@v2
