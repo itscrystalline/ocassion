@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 pub static CONFIG_VAR: &str = "OCCASION_CONFIG";
 pub static CONFIG_FILE_NAME: &str = "occasions.json";
-pub static SCHEMA: &str = "https://raw.githubusercontent.com/itscrystalline/occasion/refs/heads/main/ocassions.schema.json";
+pub static SCHEMA: &str = "https://raw.githubusercontent.com/itscrystalline/occasion/refs/heads/main/occasions.schema.json";
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct Config {
