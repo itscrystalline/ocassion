@@ -45,11 +45,11 @@
           };
         });
     in rec {
-      packages.occasion-latest = package ./. "0.2.0";
+      packages.occasion-latest = package ./. "0.2.1";
       packages.occasion = package (fetch {
-        rev = "5808d9283909eb79a18747995539edfac9eba12f";
+        rev = "b58126b4e46f72fb9c64f45aa5b92001bcf1841f";
         hash = "sha256-h5uZ/vht39qPLaSlhfUp20uJgivUsKWOmQLdmj402HU=";
-      }) "0.1.0";
+      }) "0.2.0";
       packages.default = packages.occasion;
     })
     // flake-utils.lib.eachDefaultSystemPassThrough (system: {
