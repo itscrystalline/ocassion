@@ -63,6 +63,7 @@ The value of `CONFIG_DIR` depends on the OS [(source)](https://docs.rs/dirs/late
 | Windows  | `{FOLDERID_RoamingAppData}`           | `C:\Users\Alice\AppData\Roaming`           |
 
 The config file is written in JSON, a schema is automatically added to a default config. The schema lives at `occasions.schema.json` at the root of the repository. 
+You can check out the schema [in the wiki](https://github.com/itscrystalline/occasion/wiki/Configuration).
 
 ## Usage
 
