@@ -9,11 +9,23 @@ jobs:
   create_release:
     runs-on: ubuntu-latest
     steps:
-      - name: Create Release from Closed Milestone
-        id: create-release-milestone
-        uses: ecampidoglio/auto-release-milestone@v1.0.0
-        with:
-          repo-token: ${{ secrets.MILESTONE_CI_GITHUB_TOKEN }}
-      - name: Print the URL of the release draft
-        if: steps.create-release-milestone.outputs.release-url != ''
-        run: echo ${{ steps.create-release-draft.outputs.release-url }}
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Extract Milestone Title
+        id: extract
+        run: |
+          echo "MILESTONE_TITLE=${{ github.event.milestone.title }}" >> $GITHUB_ENV
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ secrets.MILESTONE_CI_GITHUB_TOKEN }}
+        run: |
+          gh release create "${MILESTONE_TITLE}" \
+            --title "${MILESTONE_TITLE}" \
+            --generate-notes
