@@ -3,8 +3,6 @@ on:
   release:
     types:
       - created
-    branches:
-      - main
 
 permissions:
   contents: write
