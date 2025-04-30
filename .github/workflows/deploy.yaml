@@ -11,31 +11,31 @@ permissions:
 
 jobs:
   github-releases:
-    name: Release - ${{ matrix.platform.release-for }}
+    name: Github Releases - ${{ matrix.platform.release-for }}
     strategy:
       matrix:
         platform:
-          - release-for: Linux-x86_64
+          - release-for: linux-x86_64
             runs-on: ubuntu-24.04
             target: x86_64-unknown-linux-musl
 
-          - release-for: Linux-aarch64
+          - release-for: linux-aarch64
             runs-on: ubuntu-24.04
             target: aarch64-unknown-linux-musl
 
-          - release-for: Windows-x86_64
+          - release-for: windows-x86_64
             runs-on: windows-latest
             target: x86_64-pc-windows-msvc
 
-          # - release-for: Windows-aarch64
-            # runs-on: windows-11-arm
-            # target: aarch64-pc-windows-msvc
+          - release-for: windows-aarch64
+            runs-on: windows-latest
+            target: aarch64-pc-windows-msvc
 
-          - release-for: macOS-x86_64
+          - release-for: macos-x86_64
             runs-on: macos-latest
             target: x86_64-apple-darwin
 
-          - release-for: macOS-aarch64
+          - release-for: macos-aarch64
             runs-on: macos-latest
             target: aarch64-apple-darwin
 
@@ -54,10 +54,11 @@ jobs:
         uses: houseabsolute/actions-rust-release@v0
         with:
           executable-name: occasion 
-          target: ${{ matrix.platform.target }}
+          archive-name: occasion-${{ matrix.platform.release-for }}
           changes-file: ""
 
   crates_io:
+    name: Publish to crates.io
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
