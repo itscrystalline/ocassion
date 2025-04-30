@@ -10,8 +10,15 @@ categories = ["command-line-utilities"]
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target-family }-{ target-arch }.tar.gz"
-bin-dir = "{ name }-{ target-family }-{ target-arch }/{ bin }{ binary-ext }"
+bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "tgz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target-family }-{ target-arch }.zip"
+pkg-fmt = "zip"
+[package.metadata.binstall.overrides.aarch64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target-family }-{ target-arch }.zip"
+pkg-fmt = "zip"
 
 [dependencies]
 chrono = { version = "0.4.40", features = ["serde"] }
