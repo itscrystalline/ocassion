@@ -8,6 +8,11 @@ edition = "2024"
 license = "Unlicense"
 categories = ["command-line-utilities"]
 
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target-family }-{ target-arch }.tar.gz"
+bin-dir = "{ name }-{ target-family }-{ target-arch }/{ bin }{ binary-ext }"
+pkg-fmt = "tgz"
+
 [dependencies]
 chrono = { version = "0.4.40", features = ["serde"] }
 clap = { version = "4.5.37", features = ["derive"] }
