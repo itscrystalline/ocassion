@@ -53,6 +53,7 @@ jobs:
         with:
           executable-name: occasion 
           archive-name: occasion-${{ matrix.platform.release-for }}
+          target: ${{ matrix.platform.target }}
           changes-file: ""
 
   crates_io:
