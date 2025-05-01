@@ -1,6 +1,8 @@
+use std::process::{Command, Output};
+
 use chrono::{DateTime, Datelike, FixedOffset, Local};
 
-use crate::config::{DayOf, TimeRange, TimeRangeMessage};
+use crate::config::{CustomCommand, DayOf, TimeRange, TimeRangeMessage};
 
 impl TimeRange {
     pub fn evaluate(&self) -> bool {
@@ -52,17 +54,45 @@ impl TimeRangeMessage {
     /// ```
     pub fn try_message(&self) -> Option<String> {
         if self.time.evaluate() {
-            Some(self.message.as_ref()?.clone())
+            self.message()
         } else {
             None
         }
+    }
+
+    fn message(&self) -> Option<String> {
+        self.command.as_ref().map_or_else(
+            || self.message.clone(),
+            |CustomCommand { run, shell }| {
+                Command::new(shell.clone().unwrap_or("sh".to_string()))
+                    .arg("-c")
+                    .arg(run)
+                    .output()
+                    .map_or_else(
+                        |_| self.message.clone(),
+                        |Output { stdout, status, .. }| {
+                            if status.success() | !stdout.is_empty() {
+                                String::from_utf8(stdout).ok().map_or_else(
+                                    || self.message.clone(),
+                                    |mut str| {
+                                        str.truncate(str.trim().len());
+                                        Some(str)
+                                    },
+                                )
+                            } else {
+                                self.message.clone()
+                            }
+                        },
+                    )
+            },
+        )
     }
 
     /// similar to `try_message`, but takes a fixed DateTime. for testing.
     #[cfg(test)]
     fn try_with_datetime(&self, dt: DateTime<FixedOffset>) -> Option<String> {
         if self.time.eval_with_datetime(dt) {
-            Some(self.message.as_ref()?.clone())
+            self.message()
         } else {
             None
         }
