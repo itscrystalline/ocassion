@@ -39,6 +39,7 @@ impl TimeRangeMessage {
     /// let now = Local::now().fixed_offset();
     /// let range = TimeRangeMessage {
     ///     message: Some("hewwo !".to_string()),
+    ///     command: None,
     ///     time: TimeRange {
     ///         day_of: Some(DayOf::Month(HashSet::from_iter(vec![now.day() as u8].into_iter()))),
     ///         month: None,
@@ -165,6 +166,7 @@ mod unit_tests {
         let now = Local::now().fixed_offset();
         let range = TimeRangeMessage {
             message: Some("hewwo !".to_string()),
+            command: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                 month: None,
@@ -173,6 +175,7 @@ mod unit_tests {
         };
         let range_tmrw = TimeRangeMessage {
             message: Some("hewwo !".to_string()),
+            command: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 + 1 })),
                 month: None,
@@ -188,6 +191,7 @@ mod unit_tests {
     fn message() {
         let range = TimeRangeMessage {
             message: Some("hewwo !".to_string()),
+            command: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3, 5, 9 })),
                 month: Some(hash_set! { Month::June }),
