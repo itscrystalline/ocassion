@@ -16,7 +16,7 @@ pub fn output_of(config: &Config) -> String {
         Some(MultipleBehavior::All { seperator }) => outputs
             .into_iter()
             .reduce(|mut str, curr| {
-                str.push_str(&seperator);
+                str.push_str(seperator);
                 str.push_str(&curr);
                 str
             })

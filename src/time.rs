@@ -103,7 +103,7 @@ impl TimeRangeMessage {
 mod unit_tests {
     use map_macro::hash_set;
 
-    use crate::config::DayOf;
+    use crate::config::{CustomCommand, DayOf};
     use chrono::{Local, Month, TimeZone, Weekday};
 
     use super::*;
@@ -240,5 +240,124 @@ mod unit_tests {
         assert_eq!(range.try_with_datetime(third_june).unwrap(), "hewwo !");
         assert_eq!(range.try_with_datetime(fifth_june).unwrap(), "hewwo !");
         assert_eq!(range.try_with_datetime(ninth_june).unwrap(), "hewwo !");
+    }
+    #[test]
+    fn command_with_default_shell() {
+        let range = TimeRangeMessage {
+            message: None,
+            command: Some(CustomCommand {
+                run: "echo 'hi!'".to_string(),
+                shell: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(range.try_with_datetime(third_june).unwrap(), "hi!");
+    }
+    #[test]
+    fn command_with_bash() {
+        let range = TimeRangeMessage {
+            message: None,
+            command: Some(CustomCommand {
+                run: "echo 'hi!'".to_string(),
+                shell: Some("bash".to_string()),
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(range.try_with_datetime(third_june).unwrap(), "hi!");
+    }
+    #[test]
+    fn command_overtakes_message() {
+        let range = TimeRangeMessage {
+            message: Some("and not this one".to_string()),
+            command: Some(CustomCommand {
+                run: "echo 'this will get printed'".to_string(),
+                shell: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(
+            range.try_with_datetime(third_june).unwrap(),
+            "this will get printed"
+        );
+    }
+    #[test]
+    fn command_failure_fallback() {
+        let range = TimeRangeMessage {
+            message: Some("it will fall back to this".to_string()),
+            command: Some(CustomCommand {
+                run: "ls non_existing".to_string(),
+                shell: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(
+            range.try_with_datetime(third_june).unwrap(),
+            "it will fall back to this"
+        );
+    }
+    #[test]
+    fn command_failure_stdout_no_fallback() {
+        std::fs::write("existing", "meow :3").unwrap();
+        let range = TimeRangeMessage {
+            message: Some("it will not fall back to this".to_string()),
+            command: Some(CustomCommand {
+                run: "ls non_existing existing".to_string(),
+                shell: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(range.try_with_datetime(third_june).unwrap(), "existing");
+        std::fs::remove_file("existing").unwrap();
+    }
+    #[test]
+    fn both_none() {
+        let range = TimeRangeMessage {
+            message: None,
+            command: None,
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert!(range.try_with_datetime(third_june).is_none());
     }
 }

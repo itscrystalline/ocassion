@@ -50,6 +50,42 @@ fn integration_with_config_multiple() {
         assert_eq!(res, "haihewwo :3");
     });
 }
+#[test]
+fn integration_with_config_multiple_default_behavior() {
+    common::with_config_var(|| {
+        let now = Local::now().fixed_offset();
+        let test_config = Config {
+            dates: vec![
+                TimeRangeMessage {
+                    message: Some("hai".to_string()),
+                    command: None,
+                    time: TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
+                        year: Some(hash_set! { now.year() }),
+                    },
+                },
+                TimeRangeMessage {
+                    message: Some("hewwo :3".to_string()),
+                    command: None,
+                    time: TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
+                        year: Some(hash_set! { now.year() }),
+                    },
+                },
+            ],
+            multiple_behavior: None,
+            week_start_day: None,
+        };
+        common::save_config(test_config).unwrap();
+
+        let config = Config::load_or_default().unwrap();
+
+        let res = occasion::output_of(&config);
+        assert_eq!(res, "haihewwo :3");
+    });
+}
 
 #[test]
 fn integration_with_config_single() {
