@@ -21,7 +21,7 @@ fn integration_with_config_multiple() {
         let test_config = Config {
             dates: vec![
                 TimeRangeMessage {
-                    message: "hai".to_string(),
+                    message: Some("hai".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -29,7 +29,7 @@ fn integration_with_config_multiple() {
                     },
                 },
                 TimeRangeMessage {
-                    message: "hewwo :3".to_string(),
+                    message: Some("hewwo :3".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -37,7 +37,7 @@ fn integration_with_config_multiple() {
                     },
                 },
             ],
-            multiple_behavior: MultipleBehavior::default(),
+            multiple_behavior: Some(MultipleBehavior::default()),
         };
         common::save_config(test_config).unwrap();
 
@@ -54,14 +54,14 @@ fn integration_with_config_single() {
         let now = Local::now().fixed_offset();
         let test_config = Config {
             dates: vec![TimeRangeMessage {
-                message: "hai".to_string(),
+                message: Some("hai".to_string()),
                 time: TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                     year: Some(hash_set! { now.year() }),
                 },
             }],
-            multiple_behavior: MultipleBehavior::default(),
+            multiple_behavior: Some(MultipleBehavior::default()),
         };
         common::save_config(test_config).unwrap();
 
@@ -78,14 +78,14 @@ fn integration_with_config_emoji() {
         let now = Local::now().fixed_offset();
         let test_config = Config {
             dates: vec![TimeRangeMessage {
-                message: "🐈".to_string(),
+                message: Some("🐈".to_string()),
                 time: TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                     year: Some(hash_set! { now.year() }),
                 },
             }],
-            multiple_behavior: MultipleBehavior::default(),
+            multiple_behavior: Some(MultipleBehavior::default()),
         };
         common::save_config(test_config).unwrap();
 
@@ -102,7 +102,7 @@ fn integration_with_matching_and_nonmatching() {
         let test_config = Config {
             dates: vec![
                 TimeRangeMessage {
-                    message: "hai".to_string(),
+                    message: Some("hai".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -110,7 +110,7 @@ fn integration_with_matching_and_nonmatching() {
                     },
                 },
                 TimeRangeMessage {
-                    message: "hewwo :3".to_string(),
+                    message: Some("hewwo :3".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 + 1 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -118,7 +118,7 @@ fn integration_with_matching_and_nonmatching() {
                     },
                 },
             ],
-            multiple_behavior: MultipleBehavior::default(),
+            multiple_behavior: Some(MultipleBehavior::default()),
         };
         common::save_config(test_config).unwrap();
 
@@ -135,7 +135,7 @@ fn integration_with_all_custom_seperator() {
         let test_config = Config {
             dates: vec![
                 TimeRangeMessage {
-                    message: "hai".to_string(),
+                    message: Some("hai".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -143,7 +143,7 @@ fn integration_with_all_custom_seperator() {
                     },
                 },
                 TimeRangeMessage {
-                    message: "hewwo :3".to_string(),
+                    message: Some("hewwo :3".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -151,7 +151,7 @@ fn integration_with_all_custom_seperator() {
                     },
                 },
                 TimeRangeMessage {
-                    message: "yipee !! \n this is on a new line".to_string(),
+                    message: Some("yipee !! \n this is on a new line".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -159,9 +159,9 @@ fn integration_with_all_custom_seperator() {
                     },
                 },
             ],
-            multiple_behavior: MultipleBehavior::All {
+            multiple_behavior: Some(MultipleBehavior::All {
                 seperator: "\n".to_string(),
-            },
+            }),
         };
         common::save_config(test_config).unwrap();
 
@@ -178,7 +178,7 @@ fn integration_with_first() {
         let test_config = Config {
             dates: vec![
                 TimeRangeMessage {
-                    message: "hai".to_string(),
+                    message: Some("hai".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -186,7 +186,7 @@ fn integration_with_first() {
                     },
                 },
                 TimeRangeMessage {
-                    message: "hewwo :3".to_string(),
+                    message: Some("hewwo :3".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -194,7 +194,7 @@ fn integration_with_first() {
                     },
                 },
                 TimeRangeMessage {
-                    message: "yipee !! \n this is on a new line".to_string(),
+                    message: Some("yipee !! \n this is on a new line".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -202,7 +202,7 @@ fn integration_with_first() {
                     },
                 },
             ],
-            multiple_behavior: MultipleBehavior::First,
+            multiple_behavior: Some(MultipleBehavior::First),
         };
         common::save_config(test_config).unwrap();
 
@@ -219,7 +219,7 @@ fn integration_with_last() {
         let test_config = Config {
             dates: vec![
                 TimeRangeMessage {
-                    message: "hai".to_string(),
+                    message: Some("hai".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -227,7 +227,7 @@ fn integration_with_last() {
                     },
                 },
                 TimeRangeMessage {
-                    message: "hewwo :3".to_string(),
+                    message: Some("hewwo :3".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -235,7 +235,7 @@ fn integration_with_last() {
                     },
                 },
                 TimeRangeMessage {
-                    message: "yipee !! \n this is on a new line".to_string(),
+                    message: Some("yipee !! \n this is on a new line".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -243,7 +243,7 @@ fn integration_with_last() {
                     },
                 },
             ],
-            multiple_behavior: MultipleBehavior::Last,
+            multiple_behavior: Some(MultipleBehavior::Last),
         };
         common::save_config(test_config).unwrap();
 
@@ -260,7 +260,7 @@ fn integration_with_random() {
         let test_config = Config {
             dates: vec![
                 TimeRangeMessage {
-                    message: "hai".to_string(),
+                    message: Some("hai".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -268,7 +268,7 @@ fn integration_with_random() {
                     },
                 },
                 TimeRangeMessage {
-                    message: "hewwo :3".to_string(),
+                    message: Some("hewwo :3".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -276,7 +276,7 @@ fn integration_with_random() {
                     },
                 },
                 TimeRangeMessage {
-                    message: "mraow".to_string(),
+                    message: Some("mraow".to_string()),
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -284,7 +284,7 @@ fn integration_with_random() {
                     },
                 },
             ],
-            multiple_behavior: MultipleBehavior::Random,
+            multiple_behavior: Some(MultipleBehavior::Random),
         };
         common::save_config(test_config).unwrap();
 

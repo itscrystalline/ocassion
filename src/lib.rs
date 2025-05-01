@@ -13,16 +13,23 @@ pub fn output_of(config: &Config) -> String {
         .filter_map(|message| message.try_message())
         .collect();
     match behavior {
-        MultipleBehavior::All { seperator } => outputs
+        Some(MultipleBehavior::All { seperator }) => outputs
             .into_iter()
             .reduce(|mut str, curr| {
-                str.push_str(seperator);
+                str.push_str(&seperator);
                 str.push_str(&curr);
                 str
             })
             .unwrap_or_default(),
-        MultipleBehavior::First => outputs.first().map_or("", |v| v).to_string(),
-        MultipleBehavior::Last => outputs.last().map_or("", |v| v).to_string(),
-        MultipleBehavior::Random => outputs[fastrand::usize(..outputs.len())].clone(),
+        None => outputs
+            .into_iter()
+            .reduce(|mut str, curr| {
+                str.push_str(&curr);
+                str
+            })
+            .unwrap_or_default(),
+        Some(MultipleBehavior::First) => outputs.first().map_or("", |v| v).to_string(),
+        Some(MultipleBehavior::Last) => outputs.last().map_or("", |v| v).to_string(),
+        Some(MultipleBehavior::Random) => outputs[fastrand::usize(..outputs.len())].clone(),
     }
 }

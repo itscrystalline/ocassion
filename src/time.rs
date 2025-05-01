@@ -38,7 +38,7 @@ impl TimeRangeMessage {
     ///
     /// let now = Local::now().fixed_offset();
     /// let range = TimeRangeMessage {
-    ///     message: "hewwo !".to_string(),
+    ///     message: Some("hewwo !".to_string()),
     ///     time: TimeRange {
     ///         day_of: Some(DayOf::Month(HashSet::from_iter(vec![now.day() as u8].into_iter()))),
     ///         month: None,
@@ -51,7 +51,7 @@ impl TimeRangeMessage {
     /// ```
     pub fn try_message(&self) -> Option<String> {
         if self.time.evaluate() {
-            Some(self.message.clone())
+            Some(self.message.as_ref()?.clone())
         } else {
             None
         }
@@ -61,7 +61,7 @@ impl TimeRangeMessage {
     #[cfg(test)]
     fn try_with_datetime(&self, dt: DateTime<FixedOffset>) -> Option<String> {
         if self.time.eval_with_datetime(dt) {
-            Some(self.message.clone())
+            Some(self.message.as_ref()?.clone())
         } else {
             None
         }
@@ -164,7 +164,7 @@ mod unit_tests {
     fn message_now() {
         let now = Local::now().fixed_offset();
         let range = TimeRangeMessage {
-            message: "hewwo !".to_string(),
+            message: Some("hewwo !".to_string()),
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                 month: None,
@@ -172,7 +172,7 @@ mod unit_tests {
             },
         };
         let range_tmrw = TimeRangeMessage {
-            message: "hewwo !".to_string(),
+            message: Some("hewwo !".to_string()),
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 + 1 })),
                 month: None,
@@ -187,7 +187,7 @@ mod unit_tests {
     #[test]
     fn message() {
         let range = TimeRangeMessage {
-            message: "hewwo !".to_string(),
+            message: Some("hewwo !".to_string()),
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3, 5, 9 })),
                 month: Some(hash_set! { Month::June }),
