@@ -333,6 +333,38 @@ mod unit_tests {
             )
         );
     }
+    #[test]
+    fn command_with_custom_week_start() {
+        let range = TimeRangeMessage {
+            message: None,
+            command: Some(CustomCommand {
+                run: "echo $DAY_OF_WEEK $DAY_IN_WEEK $DAY_OF_MONTH $WEEK $MONTH $YEAR".to_string(),
+                shell: None,
+                shell_flags: None,
+            }),
+            week_start_day: Some(Weekday::Tue),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(
+            range.try_with_datetime(third_june).unwrap(),
+            format!(
+                "{} {} {} {} {} {}",
+                third_june.weekday(),
+                third_june.weekday().days_since(Weekday::Tue),
+                third_june.day(),
+                third_june.iso_week().week(),
+                third_june.month(),
+                third_june.year()
+            )
+        );
+    }
 
     #[test]
     fn command_strip_only_trailing_newline() {
