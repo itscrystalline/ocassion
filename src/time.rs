@@ -64,6 +64,7 @@ impl TimeRangeMessage {
         self.command.as_ref().map_or_else(
             || self.message.clone(),
             |CustomCommand { run, shell }| {
+                // TODO: add defaults for windows and shell flags
                 Command::new(shell.clone().unwrap_or("sh".to_string()))
                     .arg("-c")
                     .arg(run)
