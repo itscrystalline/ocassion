@@ -42,6 +42,7 @@ impl TimeRangeMessage {
     /// let range = TimeRangeMessage {
     ///     message: Some("hewwo !".to_string()),
     ///     command: None,
+    ///     week_start_day: None,
     ///     time: TimeRange {
     ///         day_of: Some(DayOf::Month(HashSet::from_iter(vec![now.day() as u8].into_iter()))),
     ///         month: None,
@@ -198,6 +199,7 @@ mod unit_tests {
         let range = TimeRangeMessage {
             message: Some("hewwo !".to_string()),
             command: None,
+            week_start_day: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                 month: None,
@@ -207,6 +209,7 @@ mod unit_tests {
         let range_tmrw = TimeRangeMessage {
             message: Some("hewwo !".to_string()),
             command: None,
+            week_start_day: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 + 1 })),
                 month: None,
@@ -223,6 +226,7 @@ mod unit_tests {
         let range = TimeRangeMessage {
             message: Some("hewwo !".to_string()),
             command: None,
+            week_start_day: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3, 5, 9 })),
                 month: Some(hash_set! { Month::June }),
@@ -250,6 +254,7 @@ mod unit_tests {
                 run: "echo 'hi!'".to_string(),
                 shell: None,
             }),
+            week_start_day: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
@@ -269,6 +274,7 @@ mod unit_tests {
                 run: "echo 'hi!'".to_string(),
                 shell: Some("bash".to_string()),
             }),
+            week_start_day: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
@@ -288,6 +294,7 @@ mod unit_tests {
                 run: "echo 'this will get printed'".to_string(),
                 shell: None,
             }),
+            week_start_day: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
@@ -310,6 +317,7 @@ mod unit_tests {
                 run: "ls non_existing".to_string(),
                 shell: None,
             }),
+            week_start_day: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
@@ -333,6 +341,7 @@ mod unit_tests {
                 run: "ls non_existing existing".to_string(),
                 shell: None,
             }),
+            week_start_day: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
@@ -350,6 +359,7 @@ mod unit_tests {
         let range = TimeRangeMessage {
             message: None,
             command: None,
+            week_start_day: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),

@@ -23,6 +23,7 @@ fn integration_with_config_multiple() {
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -32,6 +33,7 @@ fn integration_with_config_multiple() {
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -59,6 +61,7 @@ fn integration_with_config_multiple_default_behavior() {
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -68,6 +71,7 @@ fn integration_with_config_multiple_default_behavior() {
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -95,6 +99,7 @@ fn integration_with_config_single() {
             dates: vec![TimeRangeMessage {
                 command: None,
                 message: Some("hai".to_string()),
+                week_start_day: None,
                 time: TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -121,6 +126,7 @@ fn integration_with_config_emoji() {
             dates: vec![TimeRangeMessage {
                 message: Some("🐈".to_string()),
                 command: None,
+                week_start_day: None,
                 time: TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -147,6 +153,7 @@ fn integration_with_matching_and_nonmatching() {
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -156,6 +163,7 @@ fn integration_with_matching_and_nonmatching() {
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 + 1 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -183,6 +191,7 @@ fn integration_with_all_custom_seperator() {
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -192,6 +201,7 @@ fn integration_with_all_custom_seperator() {
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -201,6 +211,7 @@ fn integration_with_all_custom_seperator() {
                 TimeRangeMessage {
                     message: Some("yipee !! \n this is on a new line".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -230,6 +241,7 @@ fn integration_with_first() {
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -239,6 +251,7 @@ fn integration_with_first() {
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -248,6 +261,7 @@ fn integration_with_first() {
                 TimeRangeMessage {
                     message: Some("yipee !! \n this is on a new line".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -275,6 +289,7 @@ fn integration_with_last() {
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -284,6 +299,7 @@ fn integration_with_last() {
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -293,6 +309,7 @@ fn integration_with_last() {
                 TimeRangeMessage {
                     message: Some("yipee !! \n this is on a new line".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -320,6 +337,7 @@ fn integration_with_random() {
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -329,6 +347,7 @@ fn integration_with_random() {
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
@@ -338,6 +357,7 @@ fn integration_with_random() {
                 TimeRangeMessage {
                     message: Some("mraow".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),

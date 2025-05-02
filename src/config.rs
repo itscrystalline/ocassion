@@ -23,6 +23,7 @@ pub struct Config {
 pub struct TimeRangeMessage {
     pub message: Option<String>,
     pub command: Option<CustomCommand>,
+    pub week_start_day: Option<Weekday>,
     pub time: TimeRange,
 }
 
@@ -187,6 +188,7 @@ mod unit_tests {
             dates: vec![TimeRangeMessage {
                 message: Some("hai :3".to_string()),
                 command: None,
+                week_start_day: None,
                 time: TimeRange {
                     day_of: Some(DayOf::Month(hash_set! {1,3,5,7,9})),
                     month: Some(hash_set! {Month::January,Month::June,Month::July}),
@@ -203,6 +205,7 @@ mod unit_tests {
                     run: "echo \"Hello!\"".to_string(),
                     shell: None,
                 }),
+                week_start_day: None,
                 time: TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { 2 })),
                     month: None,
@@ -228,6 +231,7 @@ mod unit_tests {
                 dates: vec![TimeRangeMessage {
                     message: Some("hai :3".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
@@ -253,6 +257,7 @@ mod unit_tests {
                 dates: vec![TimeRangeMessage {
                     message: Some("hai :3".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
@@ -297,6 +302,7 @@ mod unit_tests {
                 dates: vec![TimeRangeMessage {
                     message: Some("hai :3".to_string()),
                     command: None,
+                    week_start_day: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
