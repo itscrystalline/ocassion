@@ -55,13 +55,14 @@ impl TimeRangeMessage {
     /// ```
     pub fn try_message(&self) -> Option<String> {
         if self.time.evaluate() {
-            self.message()
+            let now = Local::now().fixed_offset();
+            self.message(now)
         } else {
             None
         }
     }
 
-    fn message(&self) -> Option<String> {
+    fn message(&self, now: DateTime<FixedOffset>) -> Option<String> {
         self.command.as_ref().map_or_else(
             || self.message.clone(),
             |CustomCommand {
@@ -86,6 +87,21 @@ impl TimeRangeMessage {
                         "-c",
                     );
                 }
+                cmd.envs([
+                    ("DAY_OF_WEEK", format!("{}", now.weekday())),
+                    (
+                        "DAY_IN_WEEK",
+                        format!(
+                            "{}",
+                            now.weekday()
+                                .days_since(self.week_start_day.unwrap_or(chrono::Weekday::Sun))
+                        ),
+                    ),
+                    ("DAY_OF_MONTH", format!("{}", now.day())),
+                    ("WEEK", format!("{}", now.iso_week().week())),
+                    ("MONTH", format!("{}", now.month())),
+                    ("YEAR", format!("{}", now.year())),
+                ]);
                 cmd.arg(run).output().map_or_else(
                     |_| self.message.clone(),
                     |Output { stdout, status, .. }| {
@@ -112,7 +128,7 @@ impl TimeRangeMessage {
     #[cfg(test)]
     fn try_with_datetime(&self, dt: DateTime<FixedOffset>) -> Option<String> {
         if self.time.eval_with_datetime(dt) {
-            self.message()
+            self.message(dt)
         } else {
             None
         }
@@ -290,8 +306,7 @@ mod unit_tests {
         let range = TimeRangeMessage {
             message: None,
             command: Some(CustomCommand {
-                run: "echo '$DAY_OF_WEEK $DAY_IN_WEEK $DAY_OF_MONTH $WEEK $MONTH $YEAR'"
-                    .to_string(),
+                run: "echo $DAY_OF_WEEK $DAY_IN_WEEK $DAY_OF_MONTH $WEEK $MONTH $YEAR".to_string(),
                 shell: None,
                 shell_flags: None,
             }),
