@@ -31,6 +31,7 @@ pub struct TimeRangeMessage {
 pub struct CustomCommand {
     pub run: String,
     pub shell: Option<String>,
+    pub shell_flags: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
@@ -204,6 +205,7 @@ mod unit_tests {
                 command: Some(CustomCommand {
                     run: "echo \"Hello!\"".to_string(),
                     shell: None,
+                    shell_flags: None,
                 }),
                 week_start_day: None,
                 time: TimeRange {
