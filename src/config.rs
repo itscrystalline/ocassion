@@ -7,12 +7,14 @@ use std::{
 
 use chrono::{Month, Weekday};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 pub static CONFIG_VAR: &str = "OCCASION_CONFIG";
 pub static CONFIG_FILE_NAME: &str = "occasions.json";
 pub static SCHEMA: &str = "https://raw.githubusercontent.com/itscrystalline/occasion/refs/heads/main/occasions.schema.json";
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
     pub dates: Vec<TimeRangeMessage>,
     pub multiple_behavior: Option<MultipleBehavior>,
@@ -20,6 +22,7 @@ pub struct Config {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct TimeRangeMessage {
     pub message: Option<String>,
     pub command: Option<CustomCommand>,
@@ -30,6 +33,7 @@ pub struct TimeRangeMessage {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct RunCondition {
     pub shell: Option<CustomCommand>,
     pub predicate: Option<String>,
@@ -38,6 +42,7 @@ pub struct RunCondition {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub enum MergeStrategy {
     #[serde(alias = "and")]
     #[serde(alias = "both")]
@@ -60,6 +65,7 @@ pub enum MergeStrategy {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct CustomCommand {
     pub run: String,
     pub shell: Option<String>,
@@ -67,12 +73,14 @@ pub struct CustomCommand {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct TimeRange {
     pub day_of: Option<DayOf>,
     pub month: Option<HashSet<Month>>,
     pub year: Option<HashSet<i32>>,
 }
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub enum DayOf {
     #[serde(rename = "week")]
     Week(HashSet<Weekday>),
@@ -80,6 +88,7 @@ pub enum DayOf {
     Month(HashSet<u8>),
 }
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub enum MultipleBehavior {
     #[serde(rename = "first")]
     First,
@@ -128,8 +137,10 @@ impl Config {
 
     fn load_from(path: &Path) -> Result<Config, ConfigError> {
         let contents = std::fs::read_to_string(path)?;
-
-        Ok(serde_json::from_str(&contents)?)
+        let mut val: Value = serde_json::from_str(&contents)?;
+        let map_val = val.as_object_mut().ok_or(ConfigError::Unknown)?;
+        map_val.remove("$schema");
+        Ok(serde_json::from_value(val)?)
     }
 
     fn save_default() -> Result<(), ConfigError> {
