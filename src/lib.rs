@@ -10,7 +10,7 @@ pub fn output_of(config: &Config) -> String {
     let outputs: Vec<String> = config
         .dates
         .iter()
-        .filter_map(|message| message.try_message())
+        .filter_map(|message| message.try_message(config.week_start_day))
         .collect();
     match behavior {
         Some(MultipleBehavior::All { seperator }) => outputs
