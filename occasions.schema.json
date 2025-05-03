@@ -12,10 +12,37 @@
       "type": "array",
       "items": {
         "type": "object",
+        "required": [
+          "time"
+        ],
         "properties": {
           "message": {
             "description": "The message to show when the configured date pattern matches.",
             "type": "string"
+          },
+          "command": {
+            "description": "The inputs to pass to the spawned shell. This could either be a simple shell command, or a script that you pass into a shell or interpreter.",
+            "type": "object",
+            "required": [
+              "run"
+            ],
+            "properties": {
+              "run": {
+                "description": "The command or script to pass into the shell/interpreter. If `shell_args` is not specified, then an appropriate flag (`-c` or `/C`) is automatically added to tell the shell to run the input.",
+                "type": "string"
+              },
+              "shell": {
+                "description": "The optional host shell/interpreter. Accepts a path to an executable or just the executable name if it is already in the PATH. Defaults to `sh` on Linux/macOS, and `cmd.exe` on Windows.",
+                "type": "string"
+              },
+              "shell_args": {
+                "description": "Optional shell arguments as an array to pass to the shell/interpreter. If this is specified, then `occasion` will not add the script flag (`-c` or `/C`) for you. Keep in mind that the command/script in `run` is added last.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "time": {
             "description": "The date pattern to match.",
@@ -84,7 +111,19 @@
               }
             }
           }
-        }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "message"
+            ]
+          },
+          {
+            "required": [
+              "command"
+            ]
+          }
+        ]
       }
     },
     "multiple_behavior": {
@@ -117,6 +156,10 @@
           "additionalProperties": false
         }
       ]
+    },
+    "week_start_day": {
+      "description": "The day name in which marks the start of the new week. Accepts either the full day name, like 'Tuesday', or a shortened form, like 'Tue'. Case-insensitive. Defaults to Sunday if not specified.",
+      "type": "string"
     }
   }
 }

@@ -1,6 +1,6 @@
 use chrono::{DateTime, FixedOffset, Local, TimeZone};
 use occasion::{
-    config::{CONFIG_FILE_NAME, CONFIG_VAR, Config},
+    config::{Config, CONFIG_FILE_NAME, CONFIG_VAR},
     errors::ConfigError,
 };
 use std::env::current_dir;
@@ -28,9 +28,9 @@ pub fn save_config(config: Config) -> Result<(), ConfigError> {
     Ok(())
 }
 
-pub fn date(year: i32, month: u32, day: u32) -> DateTime<FixedOffset> {
-    Local
-        .with_ymd_and_hms(year, month, day, 0, 0, 0)
-        .unwrap()
-        .fixed_offset()
-}
+//pub fn date(year: i32, month: u32, day: u32) -> DateTime<FixedOffset> {
+//    Local
+//        .with_ymd_and_hms(year, month, day, 0, 0, 0)
+//        .unwrap()
+//        .fixed_offset()
+//}

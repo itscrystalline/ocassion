@@ -15,14 +15,22 @@ pub static SCHEMA: &str = "https://raw.githubusercontent.com/itscrystalline/occa
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct Config {
     pub dates: Vec<TimeRangeMessage>,
-    #[serde(default)]
-    pub multiple_behavior: MultipleBehavior,
+    pub multiple_behavior: Option<MultipleBehavior>,
+    pub week_start_day: Option<Weekday>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct TimeRangeMessage {
-    pub message: String,
+    pub message: Option<String>,
+    pub command: Option<CustomCommand>,
     pub time: TimeRange,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+pub struct CustomCommand {
+    pub run: String,
+    pub shell: Option<String>,
+    pub shell_flags: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
@@ -178,25 +186,33 @@ mod unit_tests {
     fn deserialize() {
         let test_config = Config {
             dates: vec![TimeRangeMessage {
-                message: "hai :3".to_string(),
+                message: Some("hai :3".to_string()),
+                command: None,
                 time: TimeRange {
-                    day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
-                    month: Some(hash_set! { Month::January, Month::June, Month::July }),
-                    year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    day_of: Some(DayOf::Month(hash_set! {1,3,5,7,9})),
+                    month: Some(hash_set! {Month::January,Month::June,Month::July}),
+                    year: Some(hash_set! {2016,2017,2018,2022,2024,2005,2030}),
                 },
             }],
-            multiple_behavior: MultipleBehavior::default(),
+            multiple_behavior: Some(MultipleBehavior::default()),
+            week_start_day: None,
         };
         let test_config_2 = Config {
             dates: vec![TimeRangeMessage {
-                message: "hewwo !".to_string(),
+                message: None,
+                command: Some(CustomCommand {
+                    run: "echo \"Hello!\"".to_string(),
+                    shell: None,
+                    shell_flags: None,
+                }),
                 time: TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { 2 })),
                     month: None,
                     year: None,
                 },
             }],
-            multiple_behavior: MultipleBehavior::First,
+            multiple_behavior: Some(MultipleBehavior::First),
+            week_start_day: None,
         };
         let json = serde_json::to_string(&test_config).unwrap();
         let json_2 = serde_json::to_string(&test_config_2).unwrap();
@@ -212,14 +228,16 @@ mod unit_tests {
         with_var(|| {
             let test_config = Config {
                 dates: vec![TimeRangeMessage {
-                    message: "hai :3".to_string(),
+                    message: Some("hai :3".to_string()),
+                    command: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     },
                 }],
-                multiple_behavior: MultipleBehavior::default(),
+                multiple_behavior: Some(MultipleBehavior::default()),
+                week_start_day: None,
             };
 
             let json = serde_json::to_string(&test_config).unwrap();
@@ -235,14 +253,16 @@ mod unit_tests {
         with_var(|| {
             let test_config = Config {
                 dates: vec![TimeRangeMessage {
-                    message: "hai :3".to_string(),
+                    message: Some("hai :3".to_string()),
+                    command: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     },
                 }],
-                multiple_behavior: MultipleBehavior::default(),
+                multiple_behavior: Some(MultipleBehavior::default()),
+                week_start_day: None,
             };
 
             let mut json = serde_json::to_string(&test_config).unwrap();
@@ -277,14 +297,16 @@ mod unit_tests {
         with_var(|| {
             let test_config = Config {
                 dates: vec![TimeRangeMessage {
-                    message: "hai :3".to_string(),
+                    message: Some("hai :3".to_string()),
+                    command: None,
                     time: TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     },
                 }],
-                multiple_behavior: MultipleBehavior::default(),
+                multiple_behavior: Some(MultipleBehavior::default()),
+                week_start_day: None,
             };
             test_config.save_this().unwrap();
 

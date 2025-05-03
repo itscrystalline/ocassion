@@ -1,6 +1,8 @@
-use chrono::{DateTime, Datelike, FixedOffset, Local};
+use std::process::{Command, Output};
 
-use crate::config::{DayOf, TimeRange, TimeRangeMessage};
+use chrono::{DateTime, Datelike, FixedOffset, Local, Weekday};
+
+use crate::config::{CustomCommand, DayOf, TimeRange, TimeRangeMessage};
 
 impl TimeRange {
     pub fn evaluate(&self) -> bool {
@@ -38,33 +40,103 @@ impl TimeRangeMessage {
     ///
     /// let now = Local::now().fixed_offset();
     /// let range = TimeRangeMessage {
-    ///     message: "hewwo !".to_string(),
+    ///     message: Some("hewwo !".to_string()),
+    ///     command: None,
     ///     time: TimeRange {
     ///         day_of: Some(DayOf::Month(HashSet::from_iter(vec![now.day() as u8].into_iter()))),
     ///         month: None,
     ///         year: None,
     ///     },
     /// };
-    /// let result = range.try_message();
+    /// let result = range.try_message(None);
     /// assert!(result.is_some());
     /// assert_eq!(result.unwrap(), "hewwo !");
     /// ```
-    pub fn try_message(&self) -> Option<String> {
+    pub fn try_message(&self, week_start_day: Option<Weekday>) -> Option<String> {
+        let week_start_day = week_start_day.unwrap_or(Weekday::Sun);
         if self.time.evaluate() {
-            Some(self.message.clone())
+            let now = Local::now().fixed_offset();
+            self.message(now, week_start_day)
         } else {
             None
         }
     }
 
+    fn message(&self, now: DateTime<FixedOffset>, week_start_day: Weekday) -> Option<String> {
+        self.command.as_ref().map_or_else(
+            || self.message.clone(),
+            |command| command.run(now, week_start_day).or(self.message.clone()),
+        )
+    }
+
     /// similar to `try_message`, but takes a fixed DateTime. for testing.
     #[cfg(test)]
-    fn try_with_datetime(&self, dt: DateTime<FixedOffset>) -> Option<String> {
+    fn try_with_datetime(
+        &self,
+        dt: DateTime<FixedOffset>,
+        week_start_day: Option<Weekday>,
+    ) -> Option<String> {
+        let week_start_day = week_start_day.unwrap_or(Weekday::Sun);
         if self.time.eval_with_datetime(dt) {
-            Some(self.message.clone())
+            self.message(dt, week_start_day)
         } else {
             None
         }
+    }
+}
+
+impl CustomCommand {
+    /// Runs the input with the specified shell and shell_args, and returns the `stdout` of the
+    /// command wrapped in `Some`, or `None` if the command fails and stdout is empty.
+    fn run(&self, now: DateTime<FixedOffset>, week_start_day: Weekday) -> Option<String> {
+        let CustomCommand {
+            run,
+            shell,
+            shell_flags,
+        } = self;
+        let mut cmd = Command::new(shell.clone().unwrap_or(
+            #[cfg(target_os = "windows")]
+            "cmd.exe".to_string(),
+            #[cfg(not(target_os = "windows"))]
+            "sh".to_string(),
+        ));
+        if let Some(shell_flags) = shell_flags {
+            cmd.args(shell_flags);
+        } else {
+            cmd.arg(
+                #[cfg(target_os = "windows")]
+                "/C",
+                #[cfg(not(target_os = "windows"))]
+                "-c",
+            );
+        }
+        cmd.envs([
+            ("DAY_OF_WEEK", format!("{}", now.weekday())),
+            (
+                "DAY_IN_WEEK",
+                format!("{}", now.weekday().days_since(week_start_day)),
+            ),
+            ("DAY_OF_MONTH", format!("{}", now.day())),
+            ("WEEK", format!("{}", now.iso_week().week())),
+            ("MONTH", format!("{}", now.month())),
+            ("YEAR", format!("{}", now.year())),
+        ]);
+        cmd.arg(run)
+            .output()
+            .ok()
+            .map(|Output { stdout, status, .. }| {
+                if status.success() | !stdout.is_empty() {
+                    let opt = String::from_utf8(stdout).ok().map(|mut str| {
+                        if str.ends_with("\n") {
+                            _ = str.pop();
+                        }
+                        Some(str)
+                    });
+                    opt.flatten()
+                } else {
+                    None
+                }
+            })?
     }
 }
 
@@ -72,7 +144,7 @@ impl TimeRangeMessage {
 mod unit_tests {
     use map_macro::hash_set;
 
-    use crate::config::DayOf;
+    use crate::config::{CustomCommand, DayOf};
     use chrono::{Local, Month, TimeZone, Weekday};
 
     use super::*;
@@ -164,7 +236,8 @@ mod unit_tests {
     fn message_now() {
         let now = Local::now().fixed_offset();
         let range = TimeRangeMessage {
-            message: "hewwo !".to_string(),
+            message: Some("hewwo !".to_string()),
+            command: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                 month: None,
@@ -172,22 +245,24 @@ mod unit_tests {
             },
         };
         let range_tmrw = TimeRangeMessage {
-            message: "hewwo !".to_string(),
+            message: Some("hewwo !".to_string()),
+            command: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 + 1 })),
                 month: None,
                 year: None,
             },
         };
-        let result = range.try_message();
+        let result = range.try_message(None);
         assert_eq!(result.unwrap(), "hewwo !");
-        let result = range_tmrw.try_message();
+        let result = range_tmrw.try_message(None);
         assert!(result.is_none());
     }
     #[test]
     fn message() {
         let range = TimeRangeMessage {
-            message: "hewwo !".to_string(),
+            message: Some("hewwo !".to_string()),
+            command: None,
             time: TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3, 5, 9 })),
                 month: Some(hash_set! { Month::June }),
@@ -201,10 +276,273 @@ mod unit_tests {
         let ninth_june = date(2025, 6, 9);
         let third_july = date(2025, 7, 3);
 
-        assert!(range.try_with_datetime(first_june).is_none());
-        assert!(range.try_with_datetime(third_july).is_none());
-        assert_eq!(range.try_with_datetime(third_june).unwrap(), "hewwo !");
-        assert_eq!(range.try_with_datetime(fifth_june).unwrap(), "hewwo !");
-        assert_eq!(range.try_with_datetime(ninth_june).unwrap(), "hewwo !");
+        assert!(range.try_with_datetime(first_june, None).is_none());
+        assert!(range.try_with_datetime(third_july, None).is_none());
+        assert_eq!(
+            range.try_with_datetime(third_june, None).unwrap(),
+            "hewwo !"
+        );
+        assert_eq!(
+            range.try_with_datetime(fifth_june, None).unwrap(),
+            "hewwo !"
+        );
+        assert_eq!(
+            range.try_with_datetime(ninth_june, None).unwrap(),
+            "hewwo !"
+        );
+    }
+    #[test]
+    fn command_with_default_shell() {
+        let range = TimeRangeMessage {
+            message: None,
+            command: Some(CustomCommand {
+                run: "echo 'hi!'".to_string(),
+                shell: None,
+                shell_flags: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(range.try_with_datetime(third_june, None).unwrap(), "hi!");
+    }
+    #[test]
+    fn command_with_env_vars() {
+        let range = TimeRangeMessage {
+            message: None,
+            command: Some(CustomCommand {
+                run: "echo $DAY_OF_WEEK $DAY_IN_WEEK $DAY_OF_MONTH $WEEK $MONTH $YEAR".to_string(),
+                shell: None,
+                shell_flags: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(
+            range.try_with_datetime(third_june, None).unwrap(),
+            format!(
+                "{} {} {} {} {} {}",
+                third_june.weekday(),
+                third_june.weekday().days_since(Weekday::Sun),
+                third_june.day(),
+                third_june.iso_week().week(),
+                third_june.month(),
+                third_june.year()
+            )
+        );
+    }
+    #[test]
+    fn command_with_custom_week_start() {
+        let range = TimeRangeMessage {
+            message: None,
+            command: Some(CustomCommand {
+                run: "echo $DAY_OF_WEEK $DAY_IN_WEEK $DAY_OF_MONTH $WEEK $MONTH $YEAR".to_string(),
+                shell: None,
+                shell_flags: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(
+            range
+                .try_with_datetime(third_june, Some(Weekday::Tue))
+                .unwrap(),
+            format!(
+                "{} {} {} {} {} {}",
+                third_june.weekday(),
+                third_june.weekday().days_since(Weekday::Tue),
+                third_june.day(),
+                third_june.iso_week().week(),
+                third_june.month(),
+                third_june.year()
+            )
+        );
+    }
+
+    #[test]
+    fn command_strip_only_trailing_newline() {
+        let with_spaces = TimeRangeMessage {
+            message: None,
+            command: Some(CustomCommand {
+                run: "echo 'hi!    '".to_string(),
+                shell: None,
+                shell_flags: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+        let with_no_newline = TimeRangeMessage {
+            message: None,
+            command: Some(CustomCommand {
+                run: "echo -n 'hi! this will not have a newline'".to_string(),
+                shell: None,
+                shell_flags: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(
+            with_spaces.try_with_datetime(third_june, None).unwrap(),
+            "hi!    "
+        );
+        assert_eq!(
+            with_no_newline.try_with_datetime(third_june, None).unwrap(),
+            "hi! this will not have a newline"
+        );
+    }
+    #[test]
+    fn command_with_bash() {
+        let range = TimeRangeMessage {
+            message: None,
+            command: Some(CustomCommand {
+                run: "echo 'hi!'".to_string(),
+                shell: Some("bash".to_string()),
+                shell_flags: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(range.try_with_datetime(third_june, None).unwrap(), "hi!");
+    }
+    #[test]
+    fn command_overtakes_message() {
+        let range = TimeRangeMessage {
+            message: Some("and not this one".to_string()),
+            command: Some(CustomCommand {
+                run: "echo 'this will get printed'".to_string(),
+                shell: None,
+                shell_flags: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(
+            range.try_with_datetime(third_june, None).unwrap(),
+            "this will get printed"
+        );
+    }
+    #[test]
+    fn command_failure_fallback() {
+        let range = TimeRangeMessage {
+            message: Some("it will fall back to this".to_string()),
+            command: Some(CustomCommand {
+                run: "ls non_existing".to_string(),
+                shell: None,
+                shell_flags: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(
+            range.try_with_datetime(third_june, None).unwrap(),
+            "it will fall back to this"
+        );
+    }
+    #[test]
+    fn command_failure_stdout_no_fallback() {
+        std::fs::write("existing", "meow :3").unwrap();
+        let range = TimeRangeMessage {
+            message: Some("it will not fall back to this".to_string()),
+            command: Some(CustomCommand {
+                run: "ls non_existing existing".to_string(),
+                shell: None,
+                shell_flags: None,
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(
+            range.try_with_datetime(third_june, None).unwrap(),
+            "existing"
+        );
+        std::fs::remove_file("existing").unwrap();
+    }
+    #[test]
+    fn command_custom_with_flags() {
+        let range = TimeRangeMessage {
+            message: Some("it will not fall back to this".to_string()),
+            command: Some(CustomCommand {
+                run: "print('hello world!')".to_string(),
+                shell: Some("python".to_string()),
+                shell_flags: Some(vec!["-c".to_string()]),
+            }),
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert_eq!(
+            range.try_with_datetime(third_june, None).unwrap(),
+            "hello world!"
+        );
+    }
+    #[test]
+    fn both_none() {
+        let range = TimeRangeMessage {
+            message: None,
+            command: None,
+            time: TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 3 })),
+                month: Some(hash_set! { Month::June }),
+                year: None,
+            },
+        };
+
+        let third_june = date(2025, 6, 3);
+
+        assert!(range.try_with_datetime(third_june, None).is_none());
     }
 }
