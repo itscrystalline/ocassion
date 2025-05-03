@@ -1,6 +1,6 @@
 use clap::Parser;
 use colored::Colorize;
-use occasion::config::Config;
+use occasion::{config::Config, errors::ConfigError};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -10,16 +10,17 @@ struct Cli {
     check: bool,
 }
 
-fn main() {
+fn main() -> Result<(), ConfigError> {
     let flags = Cli::parse();
 
     let config = match Config::load_or_default() {
         Ok(config) => config,
         Err(e) if flags.check => {
             eprintln!("{}", format!("{e}").red());
-            return;
+            return Err(e);
         }
-        _ => return,
+        _ => return Ok(()),
     };
     println!("{}", occasion::output_of(&config));
+    Ok(())
 }
