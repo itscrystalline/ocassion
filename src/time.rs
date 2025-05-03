@@ -2,15 +2,12 @@ use std::process::{Command, Output};
 
 use chrono::{DateTime, Datelike, FixedOffset, Local, Weekday};
 
-use crate::config::{CustomCommand, DayOf, TimeRange, TimeRangeMessage};
+use crate::config::{
+    CustomCommand, DayOf, MergeStratagy, RunCondition, TimeRange, TimeRangeMessage,
+};
 
 impl TimeRange {
-    pub fn evaluate(&self) -> bool {
-        let now = Local::now().fixed_offset();
-        self.eval_with_datetime(now)
-    }
-
-    fn eval_with_datetime(&self, dt: DateTime<FixedOffset>) -> bool {
+    fn evaluate(&self, dt: DateTime<FixedOffset>) -> bool {
         let match_year = match &self.year {
             None => true,
             Some(years) => years.iter().any(|&f| f == dt.year()),
@@ -41,12 +38,12 @@ impl TimeRangeMessage {
     /// let now = Local::now().fixed_offset();
     /// let range = TimeRangeMessage {
     ///     message: Some("hewwo !".to_string()),
-    ///     command: None,
-    ///     time: TimeRange {
+    ///     time: Some(TimeRange {
     ///         day_of: Some(DayOf::Month(HashSet::from_iter(vec![now.day() as u8].into_iter()))),
     ///         month: None,
     ///         year: None,
-    ///     },
+    ///     }),
+    ///     ..Default::default()
     /// };
     /// let result = range.try_message(None);
     /// assert!(result.is_some());
@@ -164,7 +161,7 @@ mod unit_tests {
             month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
             year: Some(hash_set! { now.year() }),
         };
-        assert!(time.evaluate());
+        assert!(time.evaluate(now));
     }
 
     #[test]
@@ -178,10 +175,10 @@ mod unit_tests {
         let friday = date(2025, 5, 2);
         let sunday = date(2025, 5, 4);
         let next_week = date(2025, 5, 5);
-        assert!(time.eval_with_datetime(monday));
-        assert!(time.eval_with_datetime(friday));
-        assert!(!time.eval_with_datetime(sunday));
-        assert!(time.eval_with_datetime(next_week));
+        assert!(time.evaluate(monday));
+        assert!(time.evaluate(friday));
+        assert!(!time.evaluate(sunday));
+        assert!(time.evaluate(next_week));
     }
     #[test]
     fn eval_datetime_days_of_month() {
@@ -194,10 +191,10 @@ mod unit_tests {
         let second = date(2027, 3, 2);
         let third = date(2012, 12, 3);
         let fifth = date(2021, 9, 5);
-        assert!(!time.eval_with_datetime(third));
-        assert!(time.eval_with_datetime(first));
-        assert!(time.eval_with_datetime(second));
-        assert!(time.eval_with_datetime(fifth));
+        assert!(!time.evaluate(third));
+        assert!(time.evaluate(first));
+        assert!(time.evaluate(second));
+        assert!(time.evaluate(fifth));
     }
     #[test]
     fn eval_datetime_month() {
@@ -210,10 +207,10 @@ mod unit_tests {
         let march = date(2027, 3, 2);
         let april = date(2012, 4, 3);
         let sep = date(2021, 9, 5);
-        assert!(!time.eval_with_datetime(april));
-        assert!(time.eval_with_datetime(jan));
-        assert!(time.eval_with_datetime(march));
-        assert!(time.eval_with_datetime(sep));
+        assert!(!time.evaluate(april));
+        assert!(time.evaluate(jan));
+        assert!(time.evaluate(march));
+        assert!(time.evaluate(sep));
     }
     #[test]
     fn eval_datetime_year() {
@@ -226,10 +223,10 @@ mod unit_tests {
         let year23 = date(2023, 3, 2);
         let year24 = date(2024, 4, 3);
         let year25 = date(2025, 9, 5);
-        assert!(!time.eval_with_datetime(year24));
-        assert!(time.eval_with_datetime(year22));
-        assert!(time.eval_with_datetime(year23));
-        assert!(time.eval_with_datetime(year25));
+        assert!(!time.evaluate(year24));
+        assert!(time.evaluate(year22));
+        assert!(time.evaluate(year23));
+        assert!(time.evaluate(year25));
     }
 
     #[test]
@@ -237,21 +234,21 @@ mod unit_tests {
         let now = Local::now().fixed_offset();
         let range = TimeRangeMessage {
             message: Some("hewwo !".to_string()),
-            command: None,
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                 month: None,
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
         let range_tmrw = TimeRangeMessage {
             message: Some("hewwo !".to_string()),
-            command: None,
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 + 1 })),
                 month: None,
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
         let result = range.try_message(None);
         assert_eq!(result.unwrap(), "hewwo !");
@@ -262,12 +259,12 @@ mod unit_tests {
     fn message() {
         let range = TimeRangeMessage {
             message: Some("hewwo !".to_string()),
-            command: None,
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3, 5, 9 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
 
         let first_june = date(2025, 6, 1);
@@ -294,17 +291,17 @@ mod unit_tests {
     #[test]
     fn command_with_default_shell() {
         let range = TimeRangeMessage {
-            message: None,
             command: Some(CustomCommand {
                 run: "echo 'hi!'".to_string(),
                 shell: None,
                 shell_flags: None,
             }),
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
 
         let third_june = date(2025, 6, 3);
@@ -314,17 +311,17 @@ mod unit_tests {
     #[test]
     fn command_with_env_vars() {
         let range = TimeRangeMessage {
-            message: None,
             command: Some(CustomCommand {
                 run: "echo $DAY_OF_WEEK $DAY_IN_WEEK $DAY_OF_MONTH $WEEK $MONTH $YEAR".to_string(),
                 shell: None,
                 shell_flags: None,
             }),
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
 
         let third_june = date(2025, 6, 3);
@@ -345,17 +342,17 @@ mod unit_tests {
     #[test]
     fn command_with_custom_week_start() {
         let range = TimeRangeMessage {
-            message: None,
             command: Some(CustomCommand {
                 run: "echo $DAY_OF_WEEK $DAY_IN_WEEK $DAY_OF_MONTH $WEEK $MONTH $YEAR".to_string(),
                 shell: None,
                 shell_flags: None,
             }),
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
 
         let third_june = date(2025, 6, 3);
@@ -379,17 +376,17 @@ mod unit_tests {
     #[test]
     fn command_strip_only_trailing_newline() {
         let with_spaces = TimeRangeMessage {
-            message: None,
             command: Some(CustomCommand {
                 run: "echo 'hi!    '".to_string(),
                 shell: None,
                 shell_flags: None,
             }),
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
         let with_no_newline = TimeRangeMessage {
             message: None,
@@ -398,11 +395,12 @@ mod unit_tests {
                 shell: None,
                 shell_flags: None,
             }),
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
         let third_june = date(2025, 6, 3);
 
@@ -418,17 +416,17 @@ mod unit_tests {
     #[test]
     fn command_with_bash() {
         let range = TimeRangeMessage {
-            message: None,
             command: Some(CustomCommand {
                 run: "echo 'hi!'".to_string(),
                 shell: Some("bash".to_string()),
                 shell_flags: None,
             }),
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
 
         let third_june = date(2025, 6, 3);
@@ -444,11 +442,12 @@ mod unit_tests {
                 shell: None,
                 shell_flags: None,
             }),
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
 
         let third_june = date(2025, 6, 3);
@@ -467,11 +466,12 @@ mod unit_tests {
                 shell: None,
                 shell_flags: None,
             }),
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
 
         let third_june = date(2025, 6, 3);
@@ -491,11 +491,12 @@ mod unit_tests {
                 shell: None,
                 shell_flags: None,
             }),
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
 
         let third_june = date(2025, 6, 3);
@@ -515,11 +516,12 @@ mod unit_tests {
                 shell: Some("python".to_string()),
                 shell_flags: Some(vec!["-c".to_string()]),
             }),
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
 
         let third_june = date(2025, 6, 3);
@@ -534,11 +536,12 @@ mod unit_tests {
         let range = TimeRangeMessage {
             message: None,
             command: None,
-            time: TimeRange {
+            time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
                 month: Some(hash_set! { Month::June }),
                 year: None,
-            },
+            }),
+            ..Default::default()
         };
 
         let third_june = date(2025, 6, 3);

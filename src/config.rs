@@ -23,14 +23,40 @@ pub struct Config {
 pub struct TimeRangeMessage {
     pub message: Option<String>,
     pub command: Option<CustomCommand>,
-    pub time: TimeRange,
+    pub time: Option<TimeRange>,
     pub condition: Option<RunCondition>,
+    #[serde(default)]
+    pub merge_strategy: MergeStratagy,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct RunCondition {
     pub shell: Option<CustomCommand>,
     pub predicate: Option<String>,
+    #[serde(default)]
+    pub merge_strategy: MergeStratagy,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+pub enum MergeStratagy {
+    #[serde(rename = "and")]
+    #[serde(alias = "both")]
+    #[serde(alias = "&")]
+    AND,
+    #[default]
+    #[serde(rename = "or")]
+    #[serde(alias = "any")]
+    #[serde(alias = "|")]
+    OR,
+    #[serde(rename = "xor")]
+    #[serde(alias = "either")]
+    #[serde(alias = "^")]
+    XOR,
+    #[serde(rename = "nand")]
+    NAND,
+    #[serde(rename = "nor")]
+    #[serde(alias = "neither")]
+    NOR,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
@@ -194,29 +220,29 @@ mod unit_tests {
         let test_config = Config {
             dates: vec![TimeRangeMessage {
                 message: Some("hai :3".to_string()),
-                command: None,
-                time: TimeRange {
+                time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! {1,3,5,7,9})),
                     month: Some(hash_set! {Month::January,Month::June,Month::July}),
                     year: Some(hash_set! {2016,2017,2018,2022,2024,2005,2030}),
-                },
+                }),
+                ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::default()),
             week_start_day: None,
         };
         let test_config_2 = Config {
             dates: vec![TimeRangeMessage {
-                message: None,
                 command: Some(CustomCommand {
                     run: "echo \"Hello!\"".to_string(),
                     shell: None,
                     shell_flags: None,
                 }),
-                time: TimeRange {
+                time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { 2 })),
                     month: None,
                     year: None,
-                },
+                }),
+                ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::First),
             week_start_day: None,
@@ -236,12 +262,12 @@ mod unit_tests {
             let test_config = Config {
                 dates: vec![TimeRangeMessage {
                     message: Some("hai :3".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
-                    },
+                    }),
+                    ..Default::default()
                 }],
                 multiple_behavior: Some(MultipleBehavior::default()),
                 week_start_day: None,
@@ -261,12 +287,12 @@ mod unit_tests {
             let test_config = Config {
                 dates: vec![TimeRangeMessage {
                     message: Some("hai :3".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
-                    },
+                    }),
+                    ..Default::default()
                 }],
                 multiple_behavior: Some(MultipleBehavior::default()),
                 week_start_day: None,
@@ -305,12 +331,12 @@ mod unit_tests {
             let test_config = Config {
                 dates: vec![TimeRangeMessage {
                     message: Some("hai :3".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
-                    },
+                    }),
+                    ..Default::default()
                 }],
                 multiple_behavior: Some(MultipleBehavior::default()),
                 week_start_day: None,

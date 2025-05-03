@@ -24,21 +24,21 @@ fn integration_with_config_multiple() {
             dates: vec![
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
             ],
             multiple_behavior: Some(MultipleBehavior::default()),
@@ -60,21 +60,21 @@ fn integration_with_config_multiple_default_behavior() {
             dates: vec![
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
             ],
             multiple_behavior: None,
@@ -95,13 +95,13 @@ fn integration_with_config_single() {
         let now = Local::now().fixed_offset();
         let test_config = Config {
             dates: vec![TimeRangeMessage {
-                command: None,
                 message: Some("hai".to_string()),
-                time: TimeRange {
+                time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                     year: Some(hash_set! { now.year() }),
-                },
+                }),
+                ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::default()),
             week_start_day: None,
@@ -122,12 +122,12 @@ fn integration_with_config_emoji() {
         let test_config = Config {
             dates: vec![TimeRangeMessage {
                 message: Some("🐈".to_string()),
-                command: None,
-                time: TimeRange {
+                time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                     year: Some(hash_set! { now.year() }),
-                },
+                }),
+                ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::default()),
             week_start_day: None,
@@ -148,21 +148,21 @@ fn integration_with_matching_and_nonmatching() {
             dates: vec![
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 + 1 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
             ],
             multiple_behavior: Some(MultipleBehavior::default()),
@@ -184,30 +184,30 @@ fn integration_with_all_custom_seperator() {
             dates: vec![
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
                 TimeRangeMessage {
                     message: Some("yipee !! \n this is on a new line".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
             ],
             multiple_behavior: Some(MultipleBehavior::All {
@@ -231,30 +231,30 @@ fn integration_with_first() {
             dates: vec![
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
                 TimeRangeMessage {
                     message: Some("yipee !! \n this is on a new line".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
             ],
             multiple_behavior: Some(MultipleBehavior::First),
@@ -276,30 +276,30 @@ fn integration_with_last() {
             dates: vec![
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
                 TimeRangeMessage {
                     message: Some("yipee !! \n this is on a new line".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
             ],
             multiple_behavior: Some(MultipleBehavior::Last),
@@ -321,30 +321,30 @@ fn integration_with_random() {
             dates: vec![
                 TimeRangeMessage {
                     message: Some("hai".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
                 TimeRangeMessage {
                     message: Some("hewwo :3".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
                 TimeRangeMessage {
                     message: Some("mraow".to_string()),
-                    command: None,
-                    time: TimeRange {
+                    time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
-                    },
+                    }),
+                    ..Default::default()
                 },
             ],
             multiple_behavior: Some(MultipleBehavior::Random),
@@ -366,16 +366,16 @@ fn integration_with_shell_commands_with_vars() {
         let now = Local::now().fixed_offset();
         let test_config = Config {
             dates: vec![TimeRangeMessage {
-                message: None,
                 command: Some(CustomCommand {
                     run: "echo \"Hello! today is $DAY_OF_WEEK and it is the $DAY_IN_WEEK day of the week\"".to_string(),
                     ..Default::default()
                 }),
-                time: TimeRange {
+                time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                     year: Some(hash_set! { now.year() }),
-                },
+                }),
+                ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::Random),
             week_start_day: None,
@@ -401,16 +401,16 @@ fn integration_with_shell_commands_with_vars_and_custom_week_start() {
         let now = Local::now().fixed_offset();
         let test_config = Config {
             dates: vec![TimeRangeMessage {
-                message: None,
                 command: Some(CustomCommand {
                     run: "echo \"Hello! today is $DAY_OF_WEEK and it is the $DAY_IN_WEEK day of the week\"".to_string(),
                     ..Default::default()
                 }),
-                time: TimeRange {
+                time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                     year: Some(hash_set! { now.year() }),
-                },
+                }),
+                ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::Random),
             week_start_day: Some(Weekday::Mon),
