@@ -42,8 +42,19 @@ in {
   };
   config = mkIf cfg.enable {
     home.packages = [cfg.package];
-    xdg.configFile."occasions.json" = mkIf (cfg.enable && (cfg.settings != {})) {
+    xdg.configFile."occasions.json" = mkIf (cfg.settings != {}) {
       source = json.generate "occasions.json" cfg.settings;
+    };
+    home.activation = mkIf (cfg.settings != {}) {
+      checkOccasionConfigFile = lib.hm.dag.entryAfter ["writeBoundary"] ''
+        if ! output=$(${cfg.package}/bin/occasion --check 2>&1); then
+          echo "❌ Occasion config check failed:"
+          echo "$output"
+          exit 1
+        else
+          echo "✅ Occasion config check passed."
+        fi
+      '';
     };
   };
 }
