@@ -39,22 +39,22 @@ pub struct RunCondition {
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub enum MergeStratagy {
-    #[serde(rename = "and")]
+    #[serde(alias = "and")]
     #[serde(alias = "both")]
     #[serde(alias = "&")]
     AND,
     #[default]
-    #[serde(rename = "or")]
+    #[serde(alias = "or")]
     #[serde(alias = "any")]
     #[serde(alias = "|")]
     OR,
-    #[serde(rename = "xor")]
+    #[serde(alias = "xor")]
     #[serde(alias = "either")]
     #[serde(alias = "^")]
     XOR,
-    #[serde(rename = "nand")]
+    #[serde(alias = "nand")]
     NAND,
-    #[serde(rename = "nor")]
+    #[serde(alias = "nor")]
     #[serde(alias = "neither")]
     NOR,
 }
