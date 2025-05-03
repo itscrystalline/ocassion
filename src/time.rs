@@ -629,4 +629,232 @@ mod unit_tests {
 
         assert!(range.try_with_datetime(third_june, None).is_none());
     }
+
+    #[test]
+    fn run_condition_shell() {
+        let now = Local::now().fixed_offset();
+        let week_start_day = Weekday::Sun;
+        let cond_shell_true = RunCondition {
+            shell: Some(CustomCommand {
+                run: "true".to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let cond_shell_false = RunCondition {
+            shell: Some(CustomCommand {
+                run: "false".to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        assert!(cond_shell_true.evaluate(now, week_start_day));
+        assert!(!cond_shell_false.evaluate(now, week_start_day));
+    }
+    #[test]
+    fn run_condition_predicate() {
+        let now = Local::now().fixed_offset();
+        let week_start_day = Weekday::Sun;
+        let cond_pred_true = RunCondition {
+            predicate: Some("true".to_string()),
+            ..Default::default()
+        };
+        let cond_pred_false = RunCondition {
+            predicate: Some("false".to_string()),
+            ..Default::default()
+        };
+
+        assert!(cond_pred_true.evaluate(now, week_start_day));
+        assert!(!cond_pred_false.evaluate(now, week_start_day));
+    }
+    #[test]
+    fn run_condition_mixed() {
+        let now = Local::now().fixed_offset();
+        let week_start_day = Weekday::Sun;
+        let cond_shell_true = [
+            RunCondition {
+                shell: Some(CustomCommand {
+                    run: "true".to_string(),
+                    ..Default::default()
+                }),
+                predicate: Some("true".to_string()),
+                merge_strategy: MergeStratagy::AND,
+            },
+            RunCondition {
+                shell: Some(CustomCommand {
+                    run: "false".to_string(),
+                    ..Default::default()
+                }),
+                predicate: Some("true".to_string()),
+                merge_strategy: MergeStratagy::OR,
+            },
+            RunCondition {
+                shell: Some(CustomCommand {
+                    run: "false".to_string(),
+                    ..Default::default()
+                }),
+                predicate: Some("false".to_string()),
+                merge_strategy: MergeStratagy::NOR,
+            },
+            RunCondition {
+                shell: Some(CustomCommand {
+                    run: "false".to_string(),
+                    ..Default::default()
+                }),
+                predicate: Some("false".to_string()),
+                merge_strategy: MergeStratagy::NAND,
+            },
+            RunCondition {
+                shell: Some(CustomCommand {
+                    run: "true".to_string(),
+                    ..Default::default()
+                }),
+                predicate: Some("false".to_string()),
+                merge_strategy: MergeStratagy::XOR,
+            },
+        ];
+        let cond_shell_false = [
+            RunCondition {
+                shell: Some(CustomCommand {
+                    run: "true".to_string(),
+                    ..Default::default()
+                }),
+                predicate: Some("true".to_string()),
+                merge_strategy: MergeStratagy::NAND,
+            },
+            RunCondition {
+                shell: Some(CustomCommand {
+                    run: "false".to_string(),
+                    ..Default::default()
+                }),
+                predicate: Some("true".to_string()),
+                merge_strategy: MergeStratagy::AND,
+            },
+            RunCondition {
+                shell: Some(CustomCommand {
+                    run: "false".to_string(),
+                    ..Default::default()
+                }),
+                predicate: Some("false".to_string()),
+                merge_strategy: MergeStratagy::OR,
+            },
+            RunCondition {
+                shell: Some(CustomCommand {
+                    run: "false".to_string(),
+                    ..Default::default()
+                }),
+                predicate: Some("false".to_string()),
+                merge_strategy: MergeStratagy::XOR,
+            },
+            RunCondition {
+                shell: Some(CustomCommand {
+                    run: "true".to_string(),
+                    ..Default::default()
+                }),
+                predicate: Some("true".to_string()),
+                merge_strategy: MergeStratagy::NOR,
+            },
+        ];
+
+        let trues = cond_shell_true
+            .map(|cond| cond.evaluate(now, week_start_day))
+            .into_iter()
+            .reduce(|acc, b| acc | b);
+        let falses = cond_shell_false
+            .map(|cond| cond.evaluate(now, week_start_day))
+            .into_iter()
+            .reduce(|acc, b| acc | b);
+        assert!(trues.is_some_and(|b| b));
+        assert!(falses.is_some_and(|b| !b));
+    }
+
+    #[test]
+    fn run_condition_predicate_vars() {
+        let now = date(2025, 5, 3);
+        let week_start_day = Weekday::Mon;
+
+        let predicate = RunCondition {
+            predicate: Some(format!(
+                "DAY_IN_WEEK == {} && DAY_OF_MONTH == {} && WEEK == {} && MONTH == {} && YEAR == {}",
+                now.weekday().days_since(week_start_day),
+                now.day(),
+                now.iso_week().week(),
+                now.month(),
+                now.year()
+            )),
+            ..Default::default()
+        };
+
+        assert!(predicate.evaluate(now, week_start_day));
+    }
+    #[test]
+    fn run_condition_none() {
+        let now = date(2025, 5, 3);
+        let week_start_day = Weekday::Mon;
+
+        let predicate = RunCondition {
+            ..Default::default()
+        };
+
+        assert!(!predicate.evaluate(now, week_start_day));
+    }
+
+    #[test]
+    fn eval_no_condition() {
+        let range = TimeRangeMessage {
+            message: Some("hewwo !".to_string()),
+            ..Default::default()
+        };
+        let date = date(2025, 5, 3);
+        assert!(range.try_with_datetime(date, None).is_none())
+    }
+    #[test]
+    fn eval_run_condition() {
+        let range = TimeRangeMessage {
+            message: Some("hewwo !".to_string()),
+            condition: Some(RunCondition {
+                predicate: Some("true".to_string()),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        (0..10)
+            .map(|_| {
+                date(
+                    fastrand::i32(2000..2030),
+                    fastrand::u32(1..=12),
+                    fastrand::u32(1..=28),
+                )
+            })
+            .for_each(|date| assert_eq!(range.try_with_datetime(date, None).unwrap(), "hewwo !"));
+    }
+    #[test]
+    fn eval_mixed_condition() {
+        let range = TimeRangeMessage {
+            message: Some("hewwo !".to_string()),
+            time: Some(TimeRange {
+                day_of: Some(DayOf::Month(hash_set! { 1, 2, 3 })),
+                month: Some(hash_set! { Month::May, Month::June }),
+                year: Some(hash_set! { 2011, 2012, 2013, 2014 }),
+            }),
+            condition: Some(RunCondition {
+                predicate: Some(
+                    "(3 >= DAY_OF_MONTH) && (DAY_OF_MONTH >= 1) && (6 >= MONTH) && (MONTH >= 5) && (2014 >= YEAR) && (YEAR >= 2011)".to_string(),
+                ),
+                ..Default::default()
+            }),
+            merge_strategy: MergeStratagy::AND,
+            ..Default::default()
+        };
+        (0..10)
+            .map(|_| {
+                date(
+                    fastrand::i32(2011..=2014),
+                    fastrand::u32(5..=6),
+                    fastrand::u32(1..=3),
+                )
+            })
+            .for_each(|date| assert_eq!(range.try_with_datetime(date, None).unwrap(), "hewwo !"));
+    }
 }
