@@ -24,6 +24,13 @@ pub struct TimeRangeMessage {
     pub message: Option<String>,
     pub command: Option<CustomCommand>,
     pub time: TimeRange,
+    pub condition: Option<RunCondition>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+pub struct RunCondition {
+    pub shell: Option<CustomCommand>,
+    pub predicate: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
