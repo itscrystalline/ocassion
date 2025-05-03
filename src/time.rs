@@ -590,6 +590,12 @@ mod unit_tests {
     }
     #[test]
     fn command_custom_with_flags() {
+        let Ok(mut p) = Command::new("python").spawn() else {
+            println!("python not in env, skipping");
+            return;
+        };
+        _ = p.kill();
+        let third_june = date(2025, 6, 3);
         let range = TimeRangeMessage {
             message: Some("it will not fall back to this".to_string()),
             command: Some(CustomCommand {
@@ -604,9 +610,6 @@ mod unit_tests {
             }),
             ..Default::default()
         };
-
-        let third_june = date(2025, 6, 3);
-
         assert_eq!(
             range.try_with_datetime(third_june, None).unwrap(),
             "hello world!"
