@@ -1,6 +1,7 @@
 use std::process::{Command, Output};
 
 use chrono::{DateTime, Datelike, FixedOffset, Local, Weekday};
+use evalexpr::{context_map, eval_boolean_with_context, DefaultNumericTypes, HashMapContext};
 
 use crate::config::{
     CustomCommand, DayOf, MergeStratagy, RunCondition, TimeRange, TimeRangeMessage,
@@ -51,8 +52,8 @@ impl TimeRangeMessage {
     /// ```
     pub fn try_message(&self, week_start_day: Option<Weekday>) -> Option<String> {
         let week_start_day = week_start_day.unwrap_or(Weekday::Sun);
-        if self.time.evaluate() {
-            let now = Local::now().fixed_offset();
+        let now = Local::now().fixed_offset();
+        if self.evaluate(now, week_start_day) {
             self.message(now, week_start_day)
         } else {
             None
@@ -66,6 +67,19 @@ impl TimeRangeMessage {
         )
     }
 
+    fn evaluate(&self, now: DateTime<FixedOffset>, week_start_day: Weekday) -> bool {
+        match (&self.time, &self.condition) {
+            (Some(time), None) => time.evaluate(now),
+            (None, Some(condition)) => condition.evaluate(now, week_start_day),
+            (Some(time), Some(condition)) => {
+                let time_res = time.evaluate(now);
+                let cond_res = condition.evaluate(now, week_start_day);
+                self.merge_strategy.apply(time_res, cond_res)
+            }
+            _ => false,
+        }
+    }
+
     /// similar to `try_message`, but takes a fixed DateTime. for testing.
     #[cfg(test)]
     fn try_with_datetime(
@@ -74,7 +88,7 @@ impl TimeRangeMessage {
         week_start_day: Option<Weekday>,
     ) -> Option<String> {
         let week_start_day = week_start_day.unwrap_or(Weekday::Sun);
-        if self.time.eval_with_datetime(dt) {
+        if self.evaluate(dt, week_start_day) {
             self.message(dt, week_start_day)
         } else {
             None
@@ -83,13 +97,9 @@ impl TimeRangeMessage {
 }
 
 impl CustomCommand {
-    /// Runs the input with the specified shell and shell_args, and returns the `stdout` of the
-    /// command wrapped in `Some`, or `None` if the command fails and stdout is empty.
-    fn run(&self, now: DateTime<FixedOffset>, week_start_day: Weekday) -> Option<String> {
+    fn prepare(&self, now: DateTime<FixedOffset>, week_start_day: Weekday) -> Command {
         let CustomCommand {
-            run,
-            shell,
-            shell_flags,
+            shell, shell_flags, ..
         } = self;
         let mut cmd = Command::new(shell.clone().unwrap_or(
             #[cfg(target_os = "windows")]
@@ -118,7 +128,13 @@ impl CustomCommand {
             ("MONTH", format!("{}", now.month())),
             ("YEAR", format!("{}", now.year())),
         ]);
-        cmd.arg(run)
+        cmd
+    }
+    /// Runs the input with the specified shell and shell_args, and returns the `stdout` of the
+    /// command wrapped in `Some`, or `None` if the command fails and stdout is empty.
+    fn run(&self, now: DateTime<FixedOffset>, week_start_day: Weekday) -> Option<String> {
+        let mut cmd = self.prepare(now, week_start_day);
+        cmd.arg(self.run.clone())
             .output()
             .ok()
             .map(|Output { stdout, status, .. }| {
@@ -134,6 +150,71 @@ impl CustomCommand {
                     None
                 }
             })?
+    }
+    /// Runs the input and returns true if the command returns with exit code 0, else returns
+    /// false.
+    fn evaluate(&self, now: DateTime<FixedOffset>, week_start_day: Weekday) -> bool {
+        let mut cmd = self.prepare(now, week_start_day);
+        cmd.arg(self.run.clone())
+            .status()
+            .is_ok_and(|e| e.success())
+    }
+}
+
+impl RunCondition {
+    fn evaluate(&self, now: DateTime<FixedOffset>, week_start_day: Weekday) -> bool {
+        match self {
+            RunCondition {
+                shell: Some(command),
+                predicate: None,
+                ..
+            } => command.evaluate(now, week_start_day),
+            RunCondition {
+                shell: None,
+                predicate: Some(expr),
+                ..
+            } => {
+                let ctx: HashMapContext<DefaultNumericTypes> = context_map! {
+                    "DAY_IN_WEEK" => int (now.weekday().days_since(week_start_day)),
+                    "DAY_OF_MONTH" => int (now.day()),
+                    "WEEK" => int (now.iso_week().week()),
+                    "MONTH" => int (now.month()),
+                    "YEAR" => int (now.year()),
+                }
+                .unwrap();
+                eval_boolean_with_context(expr, &ctx).is_ok_and(|b| b)
+            }
+            RunCondition {
+                shell: Some(command),
+                predicate: Some(expr),
+                merge_strategy,
+            } => {
+                let comm_res = command.evaluate(now, week_start_day);
+                let ctx: HashMapContext<DefaultNumericTypes> = context_map! {
+                    "DAY_IN_WEEK" => int (now.weekday().days_since(week_start_day)),
+                    "DAY_OF_MONTH" => int (now.day()),
+                    "WEEK" => int (now.iso_week().week()),
+                    "MONTH" => int (now.month()),
+                    "YEAR" => int (now.year()),
+                }
+                .unwrap();
+                let expr_res = eval_boolean_with_context(expr, &ctx).is_ok_and(|b| b);
+                merge_strategy.apply(comm_res, expr_res)
+            }
+            _ => false,
+        }
+    }
+}
+
+impl MergeStratagy {
+    fn apply(&self, first: bool, second: bool) -> bool {
+        match self {
+            MergeStratagy::OR => first | second,
+            MergeStratagy::AND => first & second,
+            MergeStratagy::XOR => first ^ second,
+            MergeStratagy::NOR => !(first | second),
+            MergeStratagy::NAND => !(first & second),
+        }
     }
 }
 
