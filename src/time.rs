@@ -4,7 +4,7 @@ use chrono::{DateTime, Datelike, FixedOffset, Local, Weekday};
 use evalexpr::{context_map, eval_boolean_with_context, DefaultNumericTypes, HashMapContext};
 
 use crate::config::{
-    CustomCommand, DayOf, MergeStratagy, RunCondition, TimeRange, TimeRangeMessage,
+    CustomCommand, DayOf, MergeStrategy, RunCondition, TimeRange, TimeRangeMessage,
 };
 
 impl TimeRange {
@@ -206,14 +206,14 @@ impl RunCondition {
     }
 }
 
-impl MergeStratagy {
+impl MergeStrategy {
     fn apply(&self, first: bool, second: bool) -> bool {
         match self {
-            MergeStratagy::OR => first | second,
-            MergeStratagy::AND => first & second,
-            MergeStratagy::XOR => first ^ second,
-            MergeStratagy::NOR => !(first | second),
-            MergeStratagy::NAND => !(first & second),
+            MergeStrategy::OR => first | second,
+            MergeStrategy::AND => first & second,
+            MergeStrategy::XOR => first ^ second,
+            MergeStrategy::NOR => !(first | second),
+            MergeStrategy::NAND => !(first & second),
         }
     }
 }
@@ -679,7 +679,7 @@ mod unit_tests {
                     ..Default::default()
                 }),
                 predicate: Some("true".to_string()),
-                merge_strategy: MergeStratagy::AND,
+                merge_strategy: MergeStrategy::AND,
             },
             RunCondition {
                 shell: Some(CustomCommand {
@@ -687,7 +687,7 @@ mod unit_tests {
                     ..Default::default()
                 }),
                 predicate: Some("true".to_string()),
-                merge_strategy: MergeStratagy::OR,
+                merge_strategy: MergeStrategy::OR,
             },
             RunCondition {
                 shell: Some(CustomCommand {
@@ -695,7 +695,7 @@ mod unit_tests {
                     ..Default::default()
                 }),
                 predicate: Some("false".to_string()),
-                merge_strategy: MergeStratagy::NOR,
+                merge_strategy: MergeStrategy::NOR,
             },
             RunCondition {
                 shell: Some(CustomCommand {
@@ -703,7 +703,7 @@ mod unit_tests {
                     ..Default::default()
                 }),
                 predicate: Some("false".to_string()),
-                merge_strategy: MergeStratagy::NAND,
+                merge_strategy: MergeStrategy::NAND,
             },
             RunCondition {
                 shell: Some(CustomCommand {
@@ -711,7 +711,7 @@ mod unit_tests {
                     ..Default::default()
                 }),
                 predicate: Some("false".to_string()),
-                merge_strategy: MergeStratagy::XOR,
+                merge_strategy: MergeStrategy::XOR,
             },
         ];
         let cond_shell_false = [
@@ -721,7 +721,7 @@ mod unit_tests {
                     ..Default::default()
                 }),
                 predicate: Some("true".to_string()),
-                merge_strategy: MergeStratagy::NAND,
+                merge_strategy: MergeStrategy::NAND,
             },
             RunCondition {
                 shell: Some(CustomCommand {
@@ -729,7 +729,7 @@ mod unit_tests {
                     ..Default::default()
                 }),
                 predicate: Some("true".to_string()),
-                merge_strategy: MergeStratagy::AND,
+                merge_strategy: MergeStrategy::AND,
             },
             RunCondition {
                 shell: Some(CustomCommand {
@@ -737,7 +737,7 @@ mod unit_tests {
                     ..Default::default()
                 }),
                 predicate: Some("false".to_string()),
-                merge_strategy: MergeStratagy::OR,
+                merge_strategy: MergeStrategy::OR,
             },
             RunCondition {
                 shell: Some(CustomCommand {
@@ -745,7 +745,7 @@ mod unit_tests {
                     ..Default::default()
                 }),
                 predicate: Some("false".to_string()),
-                merge_strategy: MergeStratagy::XOR,
+                merge_strategy: MergeStrategy::XOR,
             },
             RunCondition {
                 shell: Some(CustomCommand {
@@ -753,7 +753,7 @@ mod unit_tests {
                     ..Default::default()
                 }),
                 predicate: Some("true".to_string()),
-                merge_strategy: MergeStratagy::NOR,
+                merge_strategy: MergeStrategy::NOR,
             },
         ];
 
@@ -844,7 +844,7 @@ mod unit_tests {
                 ),
                 ..Default::default()
             }),
-            merge_strategy: MergeStratagy::AND,
+            merge_strategy: MergeStrategy::AND,
             ..Default::default()
         };
         (0..10)

@@ -26,7 +26,7 @@ pub struct TimeRangeMessage {
     pub time: Option<TimeRange>,
     pub condition: Option<RunCondition>,
     #[serde(default)]
-    pub merge_strategy: MergeStratagy,
+    pub merge_strategy: MergeStrategy,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
@@ -34,11 +34,11 @@ pub struct RunCondition {
     pub shell: Option<CustomCommand>,
     pub predicate: Option<String>,
     #[serde(default)]
-    pub merge_strategy: MergeStratagy,
+    pub merge_strategy: MergeStrategy,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
-pub enum MergeStratagy {
+pub enum MergeStrategy {
     #[serde(alias = "and")]
     #[serde(alias = "both")]
     #[serde(alias = "&")]
