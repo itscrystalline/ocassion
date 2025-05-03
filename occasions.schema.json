@@ -12,16 +12,13 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": [
-          "time"
-        ],
         "properties": {
           "message": {
             "description": "The message to show when the configured date pattern matches.",
             "type": "string"
           },
           "command": {
-            "description": "The inputs to pass to the spawned shell. This could either be a simple shell command, or a script that you pass into a shell or interpreter.",
+            "description": "The inputs to pass to the spawned shell. This could either be a simple shell command, or a script that you pass into a shell or interpreter.\nThe following environment variables are available to you:\n  - `DAY_OF_WEEK`: The name of day of the week. (ex. \"Tuesday\")\n  - `DAY_IN_WEEK`: The number of days after the week has started. Week boundary is set in `week_start_day`.\n  - `DAY_OF_MONTH`: The day of the month.\n  - `WEEK`: The week number in the year.\n  - `MONTH`: The month number.\n  - `YEAR`: The year in your system's default locale's year format, usually AD.",
             "type": "object",
             "required": [
               "run"
@@ -45,7 +42,7 @@
             }
           },
           "time": {
-            "description": "The date pattern to match.",
+            "description": "The date pattern to match. Also define `merge_strategy` if you want to change how this property and `condition` are merged togheter.",
             "type": "object",
             "properties": {
               "day_of": {
@@ -110,17 +107,115 @@
                 }
               }
             }
+          },
+          "condition": {
+            "description": "The custom predicate to match. Also define `merge_strategy` if you want to change how this property and `time` are merged togheter.",
+            "type": "object",
+            "properties": {
+              "shell": {
+                "description": "The inputs to pass to the spawned shell. This could either be a simple shell command, or a script that you pass into a shell or interpreter. A return code of 0 means `true`, any other value means `false`. Also define `merge_strategy` if you want to change how this property and `predicate` are merged togheter.\nThe following environment variables are available to you:\n  - `DAY_OF_WEEK`: The name of day of the week. (ex. \"Tuesday\")\n  - `DAY_IN_WEEK`: The number of days after the week has started. Week boundary is set in `week_start_day`.\n  - `DAY_OF_MONTH`: The day of the month.\n  - `WEEK`: The week number in the year.\n  - `MONTH`: The month number.\n  - `YEAR`: The year in your system's default locale's year format, usually AD.",
+                "type": "object",
+                "required": [
+                  "run"
+                ],
+                "properties": {
+                  "run": {
+                    "description": "The command or script to pass into the shell/interpreter. If `shell_args` is not specified, then an appropriate flag (`-c` or `/C`) is automatically added to tell the shell to run the input.",
+                    "type": "string"
+                  },
+                  "shell": {
+                    "description": "The optional host shell/interpreter. Accepts a path to an executable or just the executable name if it is already in the PATH. Defaults to `sh` on Linux/macOS, and `cmd.exe` on Windows.",
+                    "type": "string"
+                  },
+                  "shell_args": {
+                    "description": "Optional shell arguments as an array to pass to the shell/interpreter. If this is specified, then `occasion` will not add the script flag (`-c` or `/C`) for you. Keep in mind that the command/script in `run` is added last.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "predicate": {
+                "description": "A custom boolean expression to evaluate. Useful if you do not want to evaluate shell args. Also define `merge_strategy` if you want to change how this property and `shell` are merged togheter.\nThe following environment variables are available to you:\n  - `DAY_IN_WEEK`: The number of days after the week has started. Week boundary is set in `week_start_day`.\n  - `DAY_OF_MONTH`: The day of the month.\n  - `WEEK`: The week number in the year.\n  - `MONTH`: The month number.\n  - `YEAR`: The year in your system's default locale's year format, usually AD.",
+                "type": "string"
+              },
+              "merge_strategy": {
+                "description": "If `shell` and `predicate` are both defined, This defines how both results should be combined. Accepts boolean operators `AND (and/both/&)`, `OR (or/any/|)`, `XOR (xor/either/^)`, `NAND (nand)` and `NOR (nor/neither)`.",
+                "type": "string",
+                "enum": [
+                  "AND",
+                  "and",
+                  "both",
+                  "&",
+                  "OR",
+                  "or",
+                  "any",
+                  "|",
+                  "XOR",
+                  "xor",
+                  "either",
+                  "^",
+                  "NAND",
+                  "nand",
+                  "NOR",
+                  "nor",
+                  "neither"
+                ]
+              }
+            }
+          },
+          "merge_strategy": {
+            "description": "If `time` and `condition` are both defined, This defines how both results should be combined. Accepts boolean operators `AND (and/both/&)`, `OR (or/any/|)`, `XOR (xor/either/^)`, `NAND (nand)` and `NOR (nor/neither)`.",
+            "type": "string",
+            "enum": [
+              "AND",
+              "and",
+              "both",
+              "&",
+              "OR",
+              "or",
+              "any",
+              "|",
+              "XOR",
+              "xor",
+              "either",
+              "^",
+              "NAND",
+              "nand",
+              "NOR",
+              "nor",
+              "neither"
+            ]
           }
         },
         "anyOf": [
           {
-            "required": [
-              "message"
+            "anyOf": [
+              {
+                "required": [
+                  "message"
+                ]
+              },
+              {
+                "required": [
+                  "command"
+                ]
+              }
             ]
           },
           {
-            "required": [
-              "command"
+            "anyOf": [
+              {
+                "required": [
+                  "time"
+                ]
+              },
+              {
+                "required": [
+                  "condition"
+                ]
+              }
             ]
           }
         ]
