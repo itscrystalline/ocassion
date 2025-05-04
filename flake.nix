@@ -14,17 +14,13 @@
         inherit system;
       };
       lib = pkgs.lib;
+      mkDerivation = pkgs.stdenvNoCC.mkDerivation;
       buildRustPackage = pkgs.rustPackages.rustPlatform.buildRustPackage;
-      fetch = {
-        rev,
-        hash,
-      }:
-        pkgs.fetchFromGitHub {
-          owner = "itscrystalline";
-          repo = "occasion";
-          rev = rev;
-          hash = hash;
-        };
+
+      releaseName = lib.strings.concatMapStringsSep "-" (n:
+        if n == "darwin"
+        then "macos"
+        else n) (lib.lists.reverseList (lib.strings.splitString "-" system));
 
       package = source: ver:
         buildRustPackage (finalAttrs: rec {
@@ -44,12 +40,40 @@
             maintainers = [];
           };
         });
+
+      binary = ver: hash:
+        mkDerivation (finalAttrs: {
+          pname = "occasion";
+          version = ver;
+
+          src = pkgs.fetchurl {
+            url = "https://github.com/itscrystalline/occasion/releases/download/v${ver}/occasion-${releaseName}.tar.gz";
+            sha256 = hash;
+          };
+
+          dontUnpack = true;
+          dontConfigure = true;
+          dontBuild = true;
+          installPhase = ''
+            runHook preInstall
+
+            tar xvzf $src
+            mkdir -p $out/bin
+            cp occasion $out/bin/
+
+            runHook postInstall
+          '';
+
+          meta = {
+            description = "A small program to print something / run a command on a specific time/timeframe. ";
+            homepage = "https://github.com/itscrystalline/occasion";
+            license = lib.licenses.unlicense;
+            maintainers = [];
+          };
+        });
     in rec {
-      packages.occasion-latest = package ./. "0.2.0";
-      packages.occasion = package (fetch {
-        rev = "b58126b4e46f72fb9c64f45aa5b92001bcf1841f";
-        hash = "sha256-h5uZ/vht39qPLaSlhfUp20uJgivUsKWOmQLdmj402HU=";
-      }) "0.2.0";
+      packages.occasion-latest = package ./. "0.3.0";
+      packages.occasion = binary "0.2.0" "sha256-v8cAbAOgDJey+/07AHFVY3quwXmPHow08jbfAQGD5NM=";
       packages.default = packages.occasion;
     })
     // flake-utils.lib.eachDefaultSystemPassThrough (system: {
