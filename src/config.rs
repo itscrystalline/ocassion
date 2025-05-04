@@ -599,4 +599,43 @@ mod unit_tests {
             assert_eq!(read, root_merge);
         });
     }
+    #[test]
+    fn import_circular() {
+        with_var(|| {
+            let root = Config {
+                imports: vec![PathBuf::from_str("import_1.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hai :3".to_string()),
+                    time: Some(TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_1 = Config {
+                imports: vec![PathBuf::from_str("occasions.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hewwo".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            import_1.save_this_with_name("import_1.json").unwrap();
+            root.save_this().unwrap();
+
+            let mut root_merge = root.clone();
+            root_merge.merge(import_1.clone());
+            root_merge.merge(root.clone());
+
+            let read = Config::load_or_default(true).unwrap();
+            assert_eq!(read, root_merge);
+        });
+    }
 }
