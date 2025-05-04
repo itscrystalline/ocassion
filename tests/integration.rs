@@ -26,6 +26,7 @@ fn integration_with_config_multiple() {
                     message: Some("hai".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -35,6 +36,7 @@ fn integration_with_config_multiple() {
                     message: Some("hewwo :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -62,6 +64,7 @@ fn integration_with_config_multiple_default_behavior() {
                     message: Some("hai".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -71,6 +74,7 @@ fn integration_with_config_multiple_default_behavior() {
                     message: Some("hewwo :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -97,6 +101,7 @@ fn integration_with_config_single() {
                 message: Some("hai".to_string()),
                 time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                    week: None,
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                     year: Some(hash_set! { now.year() }),
                 }),
@@ -123,6 +128,7 @@ fn integration_with_config_emoji() {
                 message: Some("🐈".to_string()),
                 time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                    week: None,
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                     year: Some(hash_set! { now.year() }),
                 }),
@@ -149,6 +155,7 @@ fn integration_with_matching_and_nonmatching() {
                     message: Some("hai".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -158,6 +165,7 @@ fn integration_with_matching_and_nonmatching() {
                     message: Some("hewwo :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 + 1 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -185,6 +193,7 @@ fn integration_with_all_custom_seperator() {
                     message: Some("hai".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -194,6 +203,7 @@ fn integration_with_all_custom_seperator() {
                     message: Some("hewwo :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -203,6 +213,7 @@ fn integration_with_all_custom_seperator() {
                     message: Some("yipee !! \n this is on a new line".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -232,6 +243,7 @@ fn integration_with_first() {
                     message: Some("hai".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -241,6 +253,7 @@ fn integration_with_first() {
                     message: Some("hewwo :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -250,6 +263,7 @@ fn integration_with_first() {
                     message: Some("yipee !! \n this is on a new line".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -277,6 +291,7 @@ fn integration_with_last() {
                     message: Some("hai".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -286,6 +301,7 @@ fn integration_with_last() {
                     message: Some("hewwo :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -295,6 +311,7 @@ fn integration_with_last() {
                     message: Some("yipee !! \n this is on a new line".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -322,6 +339,7 @@ fn integration_with_random() {
                     message: Some("hai".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -331,6 +349,7 @@ fn integration_with_random() {
                     message: Some("hewwo :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -340,6 +359,7 @@ fn integration_with_random() {
                     message: Some("mraow".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                        week: None,
                         month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                         year: Some(hash_set! { now.year() }),
                     }),
@@ -371,6 +391,7 @@ fn integration_with_shell_commands_with_vars() {
                 }),
                 time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                    week: None,
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                     year: Some(hash_set! { now.year() }),
                 }),
@@ -406,6 +427,7 @@ fn integration_with_shell_commands_with_vars_and_custom_week_start() {
                 }),
                 time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                    week: None,
                     month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
                     year: Some(hash_set! { now.year() }),
                 }),

@@ -1,7 +1,7 @@
 use std::process::{Command, Output};
 
 use chrono::{DateTime, Datelike, FixedOffset, Local, Weekday};
-use evalexpr::{DefaultNumericTypes, HashMapContext, context_map, eval_boolean_with_context};
+use evalexpr::{context_map, eval_boolean_with_context, DefaultNumericTypes, HashMapContext};
 
 use crate::config::{
     CustomCommand, DayOf, MergeStrategy, RunCondition, TimeRange, TimeRangeMessage,
@@ -17,13 +17,17 @@ impl TimeRange {
             None => true,
             Some(months) => months.iter().any(|&m| m as u32 == dt.month0()),
         };
+        let match_week = match &self.week {
+            None => true,
+            Some(weeks) => weeks.iter().any(|&w| w == dt.iso_week().week()),
+        };
         let match_day = match &self.day_of {
             None => true,
             Some(DayOf::Week(weekdays)) => weekdays.iter().any(|&wk| wk == dt.weekday()),
             Some(DayOf::Month(days)) => days.iter().any(|&d| d as u32 == dt.day()),
         };
 
-        match_year && match_month && match_day
+        match_year && match_month && match_week && match_day
     }
 }
 
@@ -41,6 +45,7 @@ impl TimeRangeMessage {
     ///     message: Some("hewwo !".to_string()),
     ///     time: Some(TimeRange {
     ///         day_of: Some(DayOf::Month(HashSet::from_iter(vec![now.day() as u8].into_iter()))),
+    ///         week: None,
     ///         month: None,
     ///         year: None,
     ///     }),
@@ -239,6 +244,7 @@ mod unit_tests {
         let now = Local::now().fixed_offset();
         let time = TimeRange {
             day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+            week: None,
             month: Some(hash_set! { Month::try_from(now.month() as u8).unwrap() }),
             year: Some(hash_set! { now.year() }),
         };
@@ -249,6 +255,7 @@ mod unit_tests {
     fn eval_datetime_days_of_week() {
         let time = TimeRange {
             day_of: Some(DayOf::Week(hash_set! { Weekday::Mon, Weekday::Fri })),
+            week: None,
             month: None,
             year: None,
         };
@@ -265,6 +272,7 @@ mod unit_tests {
     fn eval_datetime_days_of_month() {
         let time = TimeRange {
             day_of: Some(DayOf::Month(hash_set! { 1, 2, 5 })),
+            week: None,
             month: None,
             year: None,
         };
@@ -278,9 +286,29 @@ mod unit_tests {
         assert!(time.evaluate(fifth));
     }
     #[test]
+    fn eval_datetime_week() {
+        let time = TimeRange {
+            day_of: None,
+            week: Some(hash_set! { 1, 2, 3 }),
+            month: None,
+            year: None,
+        };
+        let first = date(2025, 1, 1);
+        let second = date(2025, 1, 8);
+        let third = date(2025, 1, 15);
+        let foruth = date(2025, 1, 22);
+        let fifth = date(2025, 1, 29);
+        assert!(time.evaluate(first));
+        assert!(time.evaluate(second));
+        assert!(time.evaluate(third));
+        assert!(!time.evaluate(foruth));
+        assert!(!time.evaluate(fifth));
+    }
+    #[test]
     fn eval_datetime_month() {
         let time = TimeRange {
             day_of: None,
+            week: None,
             month: Some(hash_set! { Month::January, Month::March, Month::September }),
             year: None,
         };
@@ -297,6 +325,7 @@ mod unit_tests {
     fn eval_datetime_year() {
         let time = TimeRange {
             day_of: None,
+            week: None,
             month: None,
             year: Some(hash_set! { 2022, 2023, 2025 }),
         };
@@ -317,6 +346,7 @@ mod unit_tests {
             message: Some("hewwo !".to_string()),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 })),
+                week: None,
                 month: None,
                 year: None,
             }),
@@ -326,6 +356,7 @@ mod unit_tests {
             message: Some("hewwo !".to_string()),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { now.day() as u8 + 1 })),
+                week: None,
                 month: None,
                 year: None,
             }),
@@ -342,6 +373,7 @@ mod unit_tests {
             message: Some("hewwo !".to_string()),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3, 5, 9 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -379,6 +411,7 @@ mod unit_tests {
             }),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -399,6 +432,7 @@ mod unit_tests {
             }),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -430,6 +464,7 @@ mod unit_tests {
             }),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -464,6 +499,7 @@ mod unit_tests {
             }),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -478,6 +514,7 @@ mod unit_tests {
             }),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -504,6 +541,7 @@ mod unit_tests {
             }),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -525,6 +563,7 @@ mod unit_tests {
             }),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -549,6 +588,7 @@ mod unit_tests {
             }),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -574,6 +614,7 @@ mod unit_tests {
             }),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -605,6 +646,7 @@ mod unit_tests {
             }),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -622,6 +664,7 @@ mod unit_tests {
             command: None,
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 3 })),
+                week: None,
                 month: Some(hash_set! { Month::June }),
                 year: None,
             }),
@@ -838,6 +881,7 @@ mod unit_tests {
             message: Some("hewwo !".to_string()),
             time: Some(TimeRange {
                 day_of: Some(DayOf::Month(hash_set! { 1, 2, 3 })),
+                    week: None,
                 month: Some(hash_set! { Month::May, Month::June }),
                 year: Some(hash_set! { 2011, 2012, 2013, 2014 }),
             }),

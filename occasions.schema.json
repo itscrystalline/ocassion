@@ -97,6 +97,16 @@
                   }
                 ]
               },
+              "week": {
+                "description": "The week number (in the year) to match. Accepts a positive number.",
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 53,
+                  "uniqueItems": true
+                }
+              },
               "month": {
                 "description": "The month to match. Accepts the full month name, like 'April', or a shortened name, like 'Apr'. Case-insensitive.",
                 "type": "array",
@@ -110,7 +120,8 @@
                 "type": "array",
                 "items": {
                   "type": "number",
-                  "minimum": 0
+                  "minimum": 0,
+                  "uniqueItems": true
                 }
               }
             }
