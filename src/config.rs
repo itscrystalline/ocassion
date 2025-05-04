@@ -237,6 +237,22 @@ impl Config {
         ));
         self.save_this_to(&PathBuf::from(&file_path_str))
     }
+    #[cfg(test)]
+    fn save_this_with_name(&self, name: &str) -> Result<(), ConfigError> {
+        use std::str::FromStr;
+
+        let file_path_str = std::env::var(CONFIG_VAR).unwrap_or(format!(
+            "{}/{}",
+            dirs::config_dir()
+                .ok_or(ConfigError::UndeterminableConfigLocation)?
+                .to_string_lossy(),
+            CONFIG_FILE_NAME
+        ));
+        let folder = PathBuf::from_str(&file_path_str).unwrap();
+        let mut folder = folder.parent().unwrap().to_path_buf();
+        folder.push(name);
+        self.save_this_to(&PathBuf::from(&folder))
+    }
 }
 
 #[cfg(test)]
@@ -422,6 +438,165 @@ mod unit_tests {
             assert!(read.is_ok());
             let read = read.unwrap();
             assert_eq!(read, test_config);
+        });
+    }
+    #[test]
+    fn import() {
+        with_var(|| {
+            let root = Config {
+                imports: vec![PathBuf::from_str("import_1.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hai :3".to_string()),
+                    time: Some(TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_1 = Config {
+                dates: vec![TimeRangeMessage {
+                    message: Some("hewwo".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                week_start_day: Some(Weekday::Wed),
+                multiple_behavior: Some(MultipleBehavior::Random),
+                ..Default::default()
+            };
+            import_1.save_this_with_name("import_1.json").unwrap();
+            root.save_this().unwrap();
+
+            let mut root_merge = root.clone();
+            root_merge.merge(import_1.clone());
+
+            let read = Config::load_or_default(true).unwrap();
+            assert_eq!(read, root_merge);
+        });
+    }
+    #[test]
+    fn import_multiple() {
+        with_var(|| {
+            let root = Config {
+                imports: vec![
+                    PathBuf::from_str("import_1.json").unwrap(),
+                    PathBuf::from_str("import_2.json").unwrap(),
+                ],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hai :3".to_string()),
+                    time: Some(TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_1 = Config {
+                dates: vec![TimeRangeMessage {
+                    message: Some("hewwo".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                week_start_day: Some(Weekday::Wed),
+                multiple_behavior: Some(MultipleBehavior::Random),
+                ..Default::default()
+            };
+            let import_2 = Config {
+                dates: vec![TimeRangeMessage {
+                    message: Some("trans rights !!".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            import_1.save_this_with_name("import_1.json").unwrap();
+            import_2.save_this_with_name("import_2.json").unwrap();
+            root.save_this().unwrap();
+
+            let mut root_merge = root.clone();
+            root_merge.merge(import_1.clone());
+            root_merge.merge(import_2.clone());
+
+            let read = Config::load_or_default(true).unwrap();
+            assert_eq!(read, root_merge);
+        });
+    }
+    #[test]
+    fn import_depth() {
+        with_var(|| {
+            let root = Config {
+                imports: vec![PathBuf::from_str("import_1.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hai :3".to_string()),
+                    time: Some(TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_1 = Config {
+                imports: vec![PathBuf::from_str("import_2.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hewwo".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_2 = Config {
+                imports: vec![PathBuf::from_str("import_3.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("trans rights !!".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_3 = Config {
+                dates: vec![TimeRangeMessage {
+                    message: Some("this will not be added".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                week_start_day: Some(Weekday::Wed),
+                ..Default::default()
+            };
+            import_1.save_this_with_name("import_1.json").unwrap();
+            import_2.save_this_with_name("import_2.json").unwrap();
+            import_3.save_this_with_name("import_3.json").unwrap();
+            root.save_this().unwrap();
+
+            let mut root_merge = root.clone();
+            root_merge.merge(import_1.clone());
+            root_merge.merge(import_2.clone());
+
+            let read = Config::load_or_default(true).unwrap();
+            assert_eq!(read, root_merge);
         });
     }
 }
