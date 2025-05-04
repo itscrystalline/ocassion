@@ -79,6 +79,7 @@ pub struct CustomCommand {
 #[serde(deny_unknown_fields)]
 pub struct TimeRange {
     pub day_of: Option<DayOf>,
+    pub week: Option<HashSet<u32>>,
     pub month: Option<HashSet<Month>>,
     pub year: Option<HashSet<i32>>,
 }
@@ -312,6 +313,7 @@ mod unit_tests {
                 message: Some("hai :3".to_string()),
                 time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! {1,3,5,7,9})),
+                    week: None,
                     month: Some(hash_set! {Month::January,Month::June,Month::July}),
                     year: Some(hash_set! {2016,2017,2018,2022,2024,2005,2030}),
                 }),
@@ -329,6 +331,7 @@ mod unit_tests {
                 }),
                 time: Some(TimeRange {
                     day_of: Some(DayOf::Month(hash_set! { 2 })),
+                    week: None,
                     month: None,
                     year: None,
                 }),
@@ -354,6 +357,7 @@ mod unit_tests {
                     message: Some("hai :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        week: None,
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     }),
@@ -379,6 +383,7 @@ mod unit_tests {
                     message: Some("hai :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        week: None,
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     }),
@@ -424,6 +429,7 @@ mod unit_tests {
                     message: Some("hai :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        week: None,
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     }),
@@ -449,6 +455,7 @@ mod unit_tests {
                     message: Some("hai :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        week: None,
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     }),
@@ -491,6 +498,7 @@ mod unit_tests {
                     message: Some("hai :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        week: None,
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     }),
@@ -543,6 +551,7 @@ mod unit_tests {
                     message: Some("hai :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        week: None,
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     }),
@@ -608,6 +617,7 @@ mod unit_tests {
                     message: Some("hai :3".to_string()),
                     time: Some(TimeRange {
                         day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        week: None,
                         month: Some(hash_set! { Month::January, Month::June, Month::July }),
                         year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
                     }),
