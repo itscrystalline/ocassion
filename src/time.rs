@@ -286,6 +286,25 @@ mod unit_tests {
         assert!(time.evaluate(fifth));
     }
     #[test]
+    fn eval_datetime_week() {
+        let time = TimeRange {
+            day_of: None,
+            week: Some(hash_set! { 1, 2, 3 }),
+            month: None,
+            year: None,
+        };
+        let first = date(2025, 1, 1);
+        let second = date(2025, 1, 8);
+        let third = date(2025, 1, 15);
+        let foruth = date(2025, 1, 22);
+        let fifth = date(2025, 1, 29);
+        assert!(time.evaluate(first));
+        assert!(time.evaluate(second));
+        assert!(time.evaluate(third));
+        assert!(!time.evaluate(foruth));
+        assert!(!time.evaluate(fifth));
+    }
+    #[test]
     fn eval_datetime_month() {
         let time = TimeRange {
             day_of: None,
