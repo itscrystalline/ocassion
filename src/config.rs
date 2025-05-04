@@ -6,20 +6,26 @@ use std::{
 };
 
 use chrono::{Month, Weekday};
+use colored::Colorize;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 pub static CONFIG_VAR: &str = "OCCASION_CONFIG";
 pub static CONFIG_FILE_NAME: &str = "occasions.json";
 pub static SCHEMA: &str = "https://raw.githubusercontent.com/itscrystalline/occasion/refs/heads/main/occasions.schema.json";
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
     pub dates: Vec<TimeRangeMessage>,
     pub multiple_behavior: Option<MultipleBehavior>,
     pub week_start_day: Option<Weekday>,
+    #[serde(default)]
+    pub imports: Vec<PathBuf>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct TimeRangeMessage {
     pub message: Option<String>,
     pub command: Option<CustomCommand>,
@@ -29,7 +35,8 @@ pub struct TimeRangeMessage {
     pub merge_strategy: MergeStrategy,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct RunCondition {
     pub shell: Option<CustomCommand>,
     pub predicate: Option<String>,
@@ -37,7 +44,8 @@ pub struct RunCondition {
     pub merge_strategy: MergeStrategy,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields)]
 pub enum MergeStrategy {
     #[serde(alias = "and")]
     #[serde(alias = "both")]
@@ -59,27 +67,31 @@ pub enum MergeStrategy {
     NOR,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct CustomCommand {
     pub run: String,
     pub shell: Option<String>,
     pub shell_flags: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct TimeRange {
     pub day_of: Option<DayOf>,
     pub month: Option<HashSet<Month>>,
     pub year: Option<HashSet<i32>>,
 }
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields)]
 pub enum DayOf {
     #[serde(rename = "week")]
     Week(HashSet<Weekday>),
     #[serde(rename = "month")]
     Month(HashSet<u8>),
 }
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields)]
 pub enum MultipleBehavior {
     #[serde(rename = "first")]
     First,
@@ -102,12 +114,12 @@ impl Default for MultipleBehavior {
 }
 
 impl Config {
-    pub fn load_or_default() -> Result<Config, ConfigError> {
-        match Config::load() {
+    pub fn load_or_default(log: bool) -> Result<Config, ConfigError> {
+        match Config::load(log) {
             Ok(conf) => Ok(conf),
             Err(ConfigError::Io(err)) if err.kind() == ErrorKind::NotFound => {
                 match Config::save_default() {
-                    Ok(()) => Config::load(),
+                    Ok(()) => Config::load(log),
                     Err(e) => Err(e),
                 }
             }
@@ -115,7 +127,7 @@ impl Config {
         }
     }
 
-    fn load() -> Result<Config, ConfigError> {
+    fn load(log: bool) -> Result<Config, ConfigError> {
         let file_path_str = std::env::var(CONFIG_VAR).unwrap_or(format!(
             "{}/{}",
             dirs::config_dir()
@@ -123,13 +135,69 @@ impl Config {
                 .to_string_lossy(),
             CONFIG_FILE_NAME
         ));
-        Self::load_from(&PathBuf::from(file_path_str))
+        Self::load_from(&PathBuf::from(file_path_str), log, 0)
     }
 
-    fn load_from(path: &Path) -> Result<Config, ConfigError> {
-        let contents = std::fs::read_to_string(path)?;
+    fn load_from(path: &Path, log: bool, depth: u8) -> Result<Config, ConfigError> {
+        if depth > 2 {
+            return Err(ConfigError::MaxRecursionDepth);
+        }
 
-        Ok(serde_json::from_str(&contents)?)
+        let contents = std::fs::read_to_string(path)?;
+        let mut val: Value = serde_json::from_str(&contents)?;
+        let map_val = val.as_object_mut().ok_or(ConfigError::Unknown)?;
+        map_val.remove("$schema");
+
+        let canon_dir_path = path
+            .canonicalize()?
+            .parent()
+            .ok_or(ConfigError::NotAFile)?
+            .to_path_buf();
+        let mut this_config: Config = serde_json::from_value(val)?;
+        if !this_config.imports.is_empty() {
+            let mut imported: Option<Config> = None;
+            for import in this_config.imports.iter() {
+                let mut canon = canon_dir_path.clone();
+                canon.push(import);
+                let path = canon.to_string_lossy();
+                let config = match Self::load_from(&canon, log, depth + 1) {
+                    Ok(config) => config,
+                    Err(e) => {
+                        if log {
+                            println!(
+                                "{}",
+                                format!("[warn] cannot import config file at {path}: {e}").yellow()
+                            );
+                        }
+                        continue;
+                    }
+                };
+                if let Some(ref mut imported) = imported {
+                    imported.merge(config);
+                } else {
+                    _ = imported.replace(config)
+                }
+            }
+            if let Some(imported) = imported {
+                this_config.merge(imported);
+            }
+        }
+
+        Ok(this_config)
+    }
+
+    fn merge(&mut self, other: Config) {
+        self.dates.extend(other.dates);
+        if self.multiple_behavior.is_none() {
+            if let Some(val) = other.multiple_behavior {
+                _ = self.multiple_behavior.replace(val)
+            }
+        }
+        if self.week_start_day.is_none() {
+            if let Some(val) = other.week_start_day {
+                _ = self.week_start_day.replace(val)
+            }
+        }
     }
 
     fn save_default() -> Result<(), ConfigError> {
@@ -169,24 +237,46 @@ impl Config {
         ));
         self.save_this_to(&PathBuf::from(&file_path_str))
     }
+    #[cfg(test)]
+    fn save_this_with_name(&self, name: &str) -> Result<(), ConfigError> {
+        use std::str::FromStr;
+
+        let file_path_str = std::env::var(CONFIG_VAR).unwrap_or(format!(
+            "{}/{}",
+            dirs::config_dir()
+                .ok_or(ConfigError::UndeterminableConfigLocation)?
+                .to_string_lossy(),
+            CONFIG_FILE_NAME
+        ));
+        let folder = PathBuf::from_str(&file_path_str).unwrap();
+        let mut folder = folder.parent().unwrap().to_path_buf();
+        folder.push(name);
+        self.save_this_to(&PathBuf::from(&folder))
+    }
 }
 
 #[cfg(test)]
 mod unit_tests {
-    use std::env::current_dir;
+    use std::{env::temp_dir, str::FromStr};
 
     use map_macro::hash_set;
 
     use super::*;
 
     fn with_var<F: FnOnce()>(run: F) {
-        let dir = current_dir().unwrap();
-        let dir = dir.to_string_lossy();
-        let file = format!("{dir}/{CONFIG_FILE_NAME}");
+        let mut dir = temp_dir();
+        dir.push(format!(
+            "occasion-test-{}",
+            fastrand::u128(u128::MIN..u128::MAX)
+        ));
+        let dir_str = dir.to_string_lossy();
+        let file = format!("{dir_str}/{CONFIG_FILE_NAME}");
+        _ = std::fs::create_dir_all(&dir);
+        println!("test dir: {dir_str}");
         temp_env::with_var(CONFIG_VAR, Some(file.clone()), move || {
             run();
-            _ = std::fs::remove_file(file);
         });
+        _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -228,7 +318,7 @@ mod unit_tests {
                 ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::default()),
-            week_start_day: None,
+            ..Default::default()
         };
         let test_config_2 = Config {
             dates: vec![TimeRangeMessage {
@@ -245,7 +335,7 @@ mod unit_tests {
                 ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::First),
-            week_start_day: None,
+            ..Default::default()
         };
         let json = serde_json::to_string(&test_config).unwrap();
         let json_2 = serde_json::to_string(&test_config_2).unwrap();
@@ -270,13 +360,13 @@ mod unit_tests {
                     ..Default::default()
                 }],
                 multiple_behavior: Some(MultipleBehavior::default()),
-                week_start_day: None,
+                ..Default::default()
             };
 
             let json = serde_json::to_string(&test_config).unwrap();
             std::fs::write(std::env::var(CONFIG_VAR).unwrap(), &json).unwrap();
 
-            let decoded_config = Config::load().unwrap();
+            let decoded_config = Config::load(false).unwrap();
             assert_eq!(test_config, decoded_config);
         });
     }
@@ -295,14 +385,14 @@ mod unit_tests {
                     ..Default::default()
                 }],
                 multiple_behavior: Some(MultipleBehavior::default()),
-                week_start_day: None,
+                ..Default::default()
             };
 
             let mut json = serde_json::to_string(&test_config).unwrap();
             json.push_str("lalalalalalalal mreow :3");
             std::fs::write(std::env::var(CONFIG_VAR).unwrap(), &json).unwrap();
 
-            let decoded_config = Config::load();
+            let decoded_config = Config::load(false);
             assert!(matches!(decoded_config, Err(ConfigError::Deserialize(_))));
         });
     }
@@ -311,7 +401,8 @@ mod unit_tests {
     fn deserialize_unreadable() {
         with_var(|| {
             // no written config
-            let decoded_config = Config::load();
+            let decoded_config = Config::load(false);
+            println!("{decoded_config:?}");
             assert!(matches!(decoded_config, Err(ConfigError::Io(_))));
         });
     }
@@ -319,7 +410,7 @@ mod unit_tests {
     #[test]
     fn read_default() {
         with_var(|| {
-            let config = Config::load_or_default();
+            let config = Config::load_or_default(false);
             assert!(config.is_ok());
             let config = config.unwrap();
             assert!(config.dates.is_empty());
@@ -339,14 +430,212 @@ mod unit_tests {
                     ..Default::default()
                 }],
                 multiple_behavior: Some(MultipleBehavior::default()),
-                week_start_day: None,
+                ..Default::default()
             };
             test_config.save_this().unwrap();
 
-            let read = Config::load_or_default();
+            let read = Config::load_or_default(false);
             assert!(read.is_ok());
             let read = read.unwrap();
             assert_eq!(read, test_config);
+        });
+    }
+    #[test]
+    fn import() {
+        with_var(|| {
+            let root = Config {
+                imports: vec![PathBuf::from_str("import_1.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hai :3".to_string()),
+                    time: Some(TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_1 = Config {
+                dates: vec![TimeRangeMessage {
+                    message: Some("hewwo".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                week_start_day: Some(Weekday::Wed),
+                multiple_behavior: Some(MultipleBehavior::Random),
+                ..Default::default()
+            };
+            import_1.save_this_with_name("import_1.json").unwrap();
+            root.save_this().unwrap();
+
+            let mut root_merge = root.clone();
+            root_merge.merge(import_1.clone());
+
+            let read = Config::load_or_default(true).unwrap();
+            assert_eq!(read, root_merge);
+        });
+    }
+    #[test]
+    fn import_multiple() {
+        with_var(|| {
+            let root = Config {
+                imports: vec![
+                    PathBuf::from_str("import_1.json").unwrap(),
+                    PathBuf::from_str("import_2.json").unwrap(),
+                ],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hai :3".to_string()),
+                    time: Some(TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_1 = Config {
+                dates: vec![TimeRangeMessage {
+                    message: Some("hewwo".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                week_start_day: Some(Weekday::Wed),
+                multiple_behavior: Some(MultipleBehavior::Random),
+                ..Default::default()
+            };
+            let import_2 = Config {
+                dates: vec![TimeRangeMessage {
+                    message: Some("trans rights !!".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            import_1.save_this_with_name("import_1.json").unwrap();
+            import_2.save_this_with_name("import_2.json").unwrap();
+            root.save_this().unwrap();
+
+            let mut root_merge = root.clone();
+            root_merge.merge(import_1.clone());
+            root_merge.merge(import_2.clone());
+
+            let read = Config::load_or_default(true).unwrap();
+            assert_eq!(read, root_merge);
+        });
+    }
+    #[test]
+    fn import_depth() {
+        with_var(|| {
+            let root = Config {
+                imports: vec![PathBuf::from_str("import_1.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hai :3".to_string()),
+                    time: Some(TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_1 = Config {
+                imports: vec![PathBuf::from_str("import_2.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hewwo".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_2 = Config {
+                imports: vec![PathBuf::from_str("import_3.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("trans rights !!".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_3 = Config {
+                dates: vec![TimeRangeMessage {
+                    message: Some("this will not be added".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                week_start_day: Some(Weekday::Wed),
+                ..Default::default()
+            };
+            import_1.save_this_with_name("import_1.json").unwrap();
+            import_2.save_this_with_name("import_2.json").unwrap();
+            import_3.save_this_with_name("import_3.json").unwrap();
+            root.save_this().unwrap();
+
+            let mut root_merge = root.clone();
+            root_merge.merge(import_1.clone());
+            root_merge.merge(import_2.clone());
+
+            let read = Config::load_or_default(true).unwrap();
+            assert_eq!(read, root_merge);
+        });
+    }
+    #[test]
+    fn import_circular() {
+        with_var(|| {
+            let root = Config {
+                imports: vec![PathBuf::from_str("import_1.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hai :3".to_string()),
+                    time: Some(TimeRange {
+                        day_of: Some(DayOf::Month(hash_set! { 1, 3, 5, 7, 9 })),
+                        month: Some(hash_set! { Month::January, Month::June, Month::July }),
+                        year: Some(hash_set! { 2016, 2017, 2018, 2022, 2024, 2005, 2030 }),
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let import_1 = Config {
+                imports: vec![PathBuf::from_str("occasions.json").unwrap()],
+                dates: vec![TimeRangeMessage {
+                    message: Some("hewwo".to_string()),
+                    condition: Some(RunCondition {
+                        predicate: Some("true".to_string()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            import_1.save_this_with_name("import_1.json").unwrap();
+            root.save_this().unwrap();
+
+            let mut root_merge = root.clone();
+            root_merge.merge(import_1.clone());
+            root_merge.merge(root.clone());
+
+            let read = Config::load_or_default(true).unwrap();
+            assert_eq!(read, root_merge);
         });
     }
 }

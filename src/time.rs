@@ -1,7 +1,7 @@
 use std::process::{Command, Output};
 
 use chrono::{DateTime, Datelike, FixedOffset, Local, Weekday};
-use evalexpr::{context_map, eval_boolean_with_context, DefaultNumericTypes, HashMapContext};
+use evalexpr::{DefaultNumericTypes, HashMapContext, context_map, eval_boolean_with_context};
 
 use crate::config::{
     CustomCommand, DayOf, MergeStrategy, RunCondition, TimeRange, TimeRangeMessage,
