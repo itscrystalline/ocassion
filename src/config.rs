@@ -6,6 +6,7 @@ use std::{
 };
 
 use chrono::{Month, Weekday};
+use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -13,15 +14,17 @@ pub static CONFIG_VAR: &str = "OCCASION_CONFIG";
 pub static CONFIG_FILE_NAME: &str = "occasions.json";
 pub static SCHEMA: &str = "https://raw.githubusercontent.com/itscrystalline/occasion/refs/heads/main/occasions.schema.json";
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
     pub dates: Vec<TimeRangeMessage>,
     pub multiple_behavior: Option<MultipleBehavior>,
     pub week_start_day: Option<Weekday>,
+    #[serde(default)]
+    pub imports: Vec<PathBuf>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct TimeRangeMessage {
     pub message: Option<String>,
@@ -32,7 +35,7 @@ pub struct TimeRangeMessage {
     pub merge_strategy: MergeStrategy,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct RunCondition {
     pub shell: Option<CustomCommand>,
@@ -41,7 +44,7 @@ pub struct RunCondition {
     pub merge_strategy: MergeStrategy,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
 pub enum MergeStrategy {
     #[serde(alias = "and")]
@@ -64,7 +67,7 @@ pub enum MergeStrategy {
     NOR,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct CustomCommand {
     pub run: String,
@@ -72,14 +75,14 @@ pub struct CustomCommand {
     pub shell_flags: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct TimeRange {
     pub day_of: Option<DayOf>,
     pub month: Option<HashSet<Month>>,
     pub year: Option<HashSet<i32>>,
 }
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
 pub enum DayOf {
     #[serde(rename = "week")]
@@ -87,7 +90,7 @@ pub enum DayOf {
     #[serde(rename = "month")]
     Month(HashSet<u8>),
 }
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
 pub enum MultipleBehavior {
     #[serde(rename = "first")]
@@ -136,11 +139,65 @@ impl Config {
     }
 
     fn load_from(path: &Path, log: bool, depth: u8) -> Result<Config, ConfigError> {
+        if depth > 2 {
+            return Err(ConfigError::MaxRecursionDepth);
+        }
+
         let contents = std::fs::read_to_string(path)?;
         let mut val: Value = serde_json::from_str(&contents)?;
         let map_val = val.as_object_mut().ok_or(ConfigError::Unknown)?;
         map_val.remove("$schema");
-        Ok(serde_json::from_value(val)?)
+
+        let canon_dir_path = path
+            .canonicalize()?
+            .parent()
+            .ok_or(ConfigError::NotAFile)?
+            .to_path_buf();
+        let mut this_config: Config = serde_json::from_value(val)?;
+        if !this_config.imports.is_empty() {
+            let mut imported: Option<Config> = None;
+            for import in this_config.imports.iter() {
+                let mut canon = canon_dir_path.clone();
+                canon.push(import);
+                let path = canon.to_string_lossy();
+                let config = match Self::load_from(&canon, log, depth + 1) {
+                    Ok(config) => config,
+                    Err(e) => {
+                        if log {
+                            println!(
+                                "{}",
+                                format!("[warn] cannot import config file at {path}: {e}").yellow()
+                            );
+                        }
+                        continue;
+                    }
+                };
+                if let Some(ref mut imported) = imported {
+                    imported.merge(config);
+                } else {
+                    _ = imported.replace(config)
+                }
+            }
+            if let Some(imported) = imported {
+                this_config.merge(imported);
+            }
+        }
+
+        Ok(this_config)
+    }
+
+    fn merge(&mut self, other: Config) {
+        self.dates.extend(other.dates);
+        if self.multiple_behavior.is_none() {
+            if let Some(val) = other.multiple_behavior {
+                _ = self.multiple_behavior.replace(val)
+            }
+        }
+        if self.week_start_day.is_none() {
+            if let Some(val) = other.week_start_day {
+                _ = self.week_start_day.replace(val)
+            }
+        }
     }
 
     fn save_default() -> Result<(), ConfigError> {
