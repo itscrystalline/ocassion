@@ -7,6 +7,13 @@
     "dates"
   ],
   "properties": {
+    "imports": {
+      "description": "A list of configuration file paths to import alongside this one, either absolute or relative to **the folder this file is in**. (not strictly the folder $OCCASION_CONFIG is in!) For performance reasons, `occasion` will not process imports more than 3 layers deep.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "dates": {
       "description": "A pair of a date pattern to match, and a message to show once the current date at runtime matches the date pattern.",
       "type": "array",
