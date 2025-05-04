@@ -73,7 +73,7 @@
         });
     in rec {
       packages.occasion-latest = package ./. "0.3.0";
-      packages.occasion = binary "0.2.0" "sha256-v8cAbAOgDJey+/07AHFVY3quwXmPHow08jbfAQGD5NM=";
+      packages.occasion = binary "0.3.0" "sha256-8WiJdD9AmbF2KVGteMbFwC54oS7XjAOa4r10jFB/1ds=";
       packages.default = packages.occasion;
     })
     // flake-utils.lib.eachDefaultSystemPassThrough (system: {
