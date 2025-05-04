@@ -17,13 +17,17 @@ impl TimeRange {
             None => true,
             Some(months) => months.iter().any(|&m| m as u32 == dt.month0()),
         };
+        let match_week = match &self.week {
+            None => true,
+            Some(weeks) => weeks.iter().any(|&w| w == dt.iso_week().week()),
+        };
         let match_day = match &self.day_of {
             None => true,
             Some(DayOf::Week(weekdays)) => weekdays.iter().any(|&wk| wk == dt.weekday()),
             Some(DayOf::Month(days)) => days.iter().any(|&d| d as u32 == dt.day()),
         };
 
-        match_year && match_month && match_day
+        match_year && match_month && match_week && match_day
     }
 }
 
