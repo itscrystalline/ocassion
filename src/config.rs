@@ -191,13 +191,19 @@ mod unit_tests {
     use super::*;
 
     fn with_var<F: FnOnce()>(run: F) {
-        let dir = current_dir().unwrap();
-        let dir = dir.to_string_lossy();
-        let file = format!("{dir}/{CONFIG_FILE_NAME}");
+        let mut dir = temp_dir();
+        dir.push(format!(
+            "occasion-test-{}",
+            fastrand::u128(u128::MIN..u128::MAX)
+        ));
+        let dir_str = dir.to_string_lossy();
+        let file = format!("{dir_str}/{CONFIG_FILE_NAME}");
+        _ = std::fs::create_dir_all(&dir);
+        println!("test dir: {dir_str}");
         temp_env::with_var(CONFIG_VAR, Some(file.clone()), move || {
             run();
-            _ = std::fs::remove_file(file);
         });
+        _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

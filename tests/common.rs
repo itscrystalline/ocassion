@@ -1,18 +1,22 @@
-use chrono::{DateTime, FixedOffset, Local, TimeZone};
 use occasion::{
-    config::{Config, CONFIG_FILE_NAME, CONFIG_VAR},
+    config::{CONFIG_FILE_NAME, CONFIG_VAR, Config},
     errors::ConfigError,
 };
-use std::env::current_dir;
+use std::env::temp_dir;
 
 pub fn with_config_var<F: FnOnce()>(run: F) {
-    let dir = current_dir().unwrap();
-    let dir = dir.to_string_lossy();
-    let file = format!("{dir}/{CONFIG_FILE_NAME}");
+    let mut dir = temp_dir();
+    dir.push(format!(
+        "occasion-test-{}",
+        fastrand::i128(i128::MIN..i128::MAX)
+    ));
+    let dir_str = dir.to_string_lossy();
+    let file = format!("{dir_str}/{CONFIG_FILE_NAME}");
+    _ = std::fs::create_dir_all(&dir);
     temp_env::with_var(CONFIG_VAR, Some(file.clone()), move || {
         run();
-        _ = std::fs::remove_file(file);
     });
+    _ = std::fs::remove_dir_all(&dir);
 }
 
 pub fn save_config(config: Config) -> Result<(), ConfigError> {
