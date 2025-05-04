@@ -13,7 +13,7 @@ struct Cli {
 fn main() -> Result<(), ConfigError> {
     let flags = Cli::parse();
 
-    let config = match Config::load_or_default() {
+    let config = match Config::load_or_default(flags.check) {
         Ok(config) => config,
         Err(e) if flags.check => {
             eprintln!("{}", format!("{e}").red());

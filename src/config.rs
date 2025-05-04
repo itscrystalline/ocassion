@@ -111,12 +111,12 @@ impl Default for MultipleBehavior {
 }
 
 impl Config {
-    pub fn load_or_default() -> Result<Config, ConfigError> {
-        match Config::load() {
+    pub fn load_or_default(log: bool) -> Result<Config, ConfigError> {
+        match Config::load(log) {
             Ok(conf) => Ok(conf),
             Err(ConfigError::Io(err)) if err.kind() == ErrorKind::NotFound => {
                 match Config::save_default() {
-                    Ok(()) => Config::load(),
+                    Ok(()) => Config::load(log),
                     Err(e) => Err(e),
                 }
             }
@@ -124,7 +124,7 @@ impl Config {
         }
     }
 
-    fn load() -> Result<Config, ConfigError> {
+    fn load(log: bool) -> Result<Config, ConfigError> {
         let file_path_str = std::env::var(CONFIG_VAR).unwrap_or(format!(
             "{}/{}",
             dirs::config_dir()
@@ -132,10 +132,10 @@ impl Config {
                 .to_string_lossy(),
             CONFIG_FILE_NAME
         ));
-        Self::load_from(&PathBuf::from(file_path_str))
+        Self::load_from(&PathBuf::from(file_path_str), log, 0)
     }
 
-    fn load_from(path: &Path) -> Result<Config, ConfigError> {
+    fn load_from(path: &Path, log: bool, depth: u8) -> Result<Config, ConfigError> {
         let contents = std::fs::read_to_string(path)?;
         let mut val: Value = serde_json::from_str(&contents)?;
         let map_val = val.as_object_mut().ok_or(ConfigError::Unknown)?;
@@ -184,7 +184,7 @@ impl Config {
 
 #[cfg(test)]
 mod unit_tests {
-    use std::env::current_dir;
+    use std::{env::temp_dir, str::FromStr};
 
     use map_macro::hash_set;
 
@@ -239,7 +239,7 @@ mod unit_tests {
                 ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::default()),
-            week_start_day: None,
+            ..Default::default()
         };
         let test_config_2 = Config {
             dates: vec![TimeRangeMessage {
@@ -256,7 +256,7 @@ mod unit_tests {
                 ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::First),
-            week_start_day: None,
+            ..Default::default()
         };
         let json = serde_json::to_string(&test_config).unwrap();
         let json_2 = serde_json::to_string(&test_config_2).unwrap();
@@ -281,13 +281,13 @@ mod unit_tests {
                     ..Default::default()
                 }],
                 multiple_behavior: Some(MultipleBehavior::default()),
-                week_start_day: None,
+                ..Default::default()
             };
 
             let json = serde_json::to_string(&test_config).unwrap();
             std::fs::write(std::env::var(CONFIG_VAR).unwrap(), &json).unwrap();
 
-            let decoded_config = Config::load().unwrap();
+            let decoded_config = Config::load(false).unwrap();
             assert_eq!(test_config, decoded_config);
         });
     }
@@ -306,14 +306,14 @@ mod unit_tests {
                     ..Default::default()
                 }],
                 multiple_behavior: Some(MultipleBehavior::default()),
-                week_start_day: None,
+                ..Default::default()
             };
 
             let mut json = serde_json::to_string(&test_config).unwrap();
             json.push_str("lalalalalalalal mreow :3");
             std::fs::write(std::env::var(CONFIG_VAR).unwrap(), &json).unwrap();
 
-            let decoded_config = Config::load();
+            let decoded_config = Config::load(false);
             assert!(matches!(decoded_config, Err(ConfigError::Deserialize(_))));
         });
     }
@@ -322,7 +322,8 @@ mod unit_tests {
     fn deserialize_unreadable() {
         with_var(|| {
             // no written config
-            let decoded_config = Config::load();
+            let decoded_config = Config::load(false);
+            println!("{decoded_config:?}");
             assert!(matches!(decoded_config, Err(ConfigError::Io(_))));
         });
     }
@@ -330,7 +331,7 @@ mod unit_tests {
     #[test]
     fn read_default() {
         with_var(|| {
-            let config = Config::load_or_default();
+            let config = Config::load_or_default(false);
             assert!(config.is_ok());
             let config = config.unwrap();
             assert!(config.dates.is_empty());
@@ -350,11 +351,11 @@ mod unit_tests {
                     ..Default::default()
                 }],
                 multiple_behavior: Some(MultipleBehavior::default()),
-                week_start_day: None,
+                ..Default::default()
             };
             test_config.save_this().unwrap();
 
-            let read = Config::load_or_default();
+            let read = Config::load_or_default(false);
             assert!(read.is_ok());
             let read = read.unwrap();
             assert_eq!(read, test_config);

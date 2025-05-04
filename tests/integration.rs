@@ -10,7 +10,7 @@ mod common;
 #[test]
 fn integration_no_config() {
     common::with_config_var(|| {
-        let empty = Config::load_or_default().unwrap();
+        let empty = Config::load_or_default(false).unwrap();
         let res = occasion::output_of(&empty);
         assert!(res.is_empty())
     });
@@ -42,11 +42,11 @@ fn integration_with_config_multiple() {
                 },
             ],
             multiple_behavior: Some(MultipleBehavior::default()),
-            week_start_day: None,
+            ..Default::default()
         };
         common::save_config(test_config).unwrap();
 
-        let config = Config::load_or_default().unwrap();
+        let config = Config::load_or_default(false).unwrap();
 
         let res = occasion::output_of(&config);
         assert_eq!(res, "haihewwo :3");
@@ -77,12 +77,11 @@ fn integration_with_config_multiple_default_behavior() {
                     ..Default::default()
                 },
             ],
-            multiple_behavior: None,
-            week_start_day: None,
+            ..Default::default()
         };
         common::save_config(test_config).unwrap();
 
-        let config = Config::load_or_default().unwrap();
+        let config = Config::load_or_default(false).unwrap();
 
         let res = occasion::output_of(&config);
         assert_eq!(res, "haihewwo :3");
@@ -104,11 +103,11 @@ fn integration_with_config_single() {
                 ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::default()),
-            week_start_day: None,
+            ..Default::default()
         };
         common::save_config(test_config).unwrap();
 
-        let config = Config::load_or_default().unwrap();
+        let config = Config::load_or_default(false).unwrap();
 
         let res = occasion::output_of(&config);
         assert_eq!(res, "hai");
@@ -130,11 +129,11 @@ fn integration_with_config_emoji() {
                 ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::default()),
-            week_start_day: None,
+            ..Default::default()
         };
         common::save_config(test_config).unwrap();
 
-        let config = Config::load_or_default().unwrap();
+        let config = Config::load_or_default(false).unwrap();
 
         let res = occasion::output_of(&config);
         assert_eq!(res, "🐈");
@@ -166,11 +165,11 @@ fn integration_with_matching_and_nonmatching() {
                 },
             ],
             multiple_behavior: Some(MultipleBehavior::default()),
-            week_start_day: None,
+            ..Default::default()
         };
         common::save_config(test_config).unwrap();
 
-        let config = Config::load_or_default().unwrap();
+        let config = Config::load_or_default(false).unwrap();
 
         let res = occasion::output_of(&config);
         assert_eq!(res, "hai");
@@ -213,11 +212,11 @@ fn integration_with_all_custom_seperator() {
             multiple_behavior: Some(MultipleBehavior::All {
                 seperator: "\n".to_string(),
             }),
-            week_start_day: None,
+            ..Default::default()
         };
         common::save_config(test_config).unwrap();
 
-        let config = Config::load_or_default().unwrap();
+        let config = Config::load_or_default(false).unwrap();
 
         let res = occasion::output_of(&config);
         assert_eq!(res, "hai\nhewwo :3\nyipee !! \n this is on a new line");
@@ -258,11 +257,11 @@ fn integration_with_first() {
                 },
             ],
             multiple_behavior: Some(MultipleBehavior::First),
-            week_start_day: None,
+            ..Default::default()
         };
         common::save_config(test_config).unwrap();
 
-        let config = Config::load_or_default().unwrap();
+        let config = Config::load_or_default(false).unwrap();
 
         let res = occasion::output_of(&config);
         assert_eq!(res, "hai");
@@ -303,11 +302,11 @@ fn integration_with_last() {
                 },
             ],
             multiple_behavior: Some(MultipleBehavior::Last),
-            week_start_day: None,
+            ..Default::default()
         };
         common::save_config(test_config).unwrap();
 
-        let config = Config::load_or_default().unwrap();
+        let config = Config::load_or_default(false).unwrap();
 
         let res = occasion::output_of(&config);
         assert_eq!(res, "yipee !! \n this is on a new line");
@@ -348,11 +347,11 @@ fn integration_with_random() {
                 },
             ],
             multiple_behavior: Some(MultipleBehavior::Random),
-            week_start_day: None,
+            ..Default::default()
         };
         common::save_config(test_config).unwrap();
 
-        let config = Config::load_or_default().unwrap();
+        let config = Config::load_or_default(false).unwrap();
 
         for _ in 0..10 {
             let res = occasion::output_of(&config);
@@ -378,11 +377,11 @@ fn integration_with_shell_commands_with_vars() {
                 ..Default::default()
             }],
             multiple_behavior: Some(MultipleBehavior::Random),
-            week_start_day: None,
+            ..Default::default()
         };
         common::save_config(test_config).unwrap();
 
-        let config = Config::load_or_default().unwrap();
+        let config = Config::load_or_default(false).unwrap();
 
         let res = occasion::output_of(&config);
         assert_eq!(
@@ -414,10 +413,11 @@ fn integration_with_shell_commands_with_vars_and_custom_week_start() {
             }],
             multiple_behavior: Some(MultipleBehavior::Random),
             week_start_day: Some(Weekday::Mon),
+            ..Default::default()
         };
         common::save_config(test_config).unwrap();
 
-        let config = Config::load_or_default().unwrap();
+        let config = Config::load_or_default(false).unwrap();
 
         let res = occasion::output_of(&config);
         assert_eq!(
