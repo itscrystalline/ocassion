@@ -41,14 +41,14 @@
           };
         });
 
-      binary = ver: hash:
+      binary = ver: hashes:
         mkDerivation (finalAttrs: {
           pname = "occasion";
           version = ver;
 
           src = pkgs.fetchurl {
             url = "https://github.com/itscrystalline/occasion/releases/download/v${ver}/occasion-${releaseName}.tar.gz";
-            sha256 = hash;
+            sha256 = hashes.${releaseName};
           };
 
           dontUnpack = true;
@@ -73,7 +73,12 @@
         });
     in rec {
       packages.occasion-latest = package ./. "0.3.0";
-      packages.occasion = binary "0.3.0" "sha256-8WiJdD9AmbF2KVGteMbFwC54oS7XjAOa4r10jFB/1ds=";
+      packages.occasion = binary "0.3.0" {
+        linux-x86_64 = "sha256-8WiJdD9AmbF2KVGteMbFwC54oS7XjAOa4r10jFB/1ds=";
+        linux-aarch64 = "sha256-5iC6w14VCYD55LwymUZGE1sfo4GaX0JIiJUj/VcqO9c=";
+        macos-x86_64 = "sha256-4iqtXKJxBRKTmWWFibCEdatdqDhFtdglUbJ43cI5MwE=";
+        macos-aarch64 = "sha256-m8e5xXF5/jRdKtKDkHxxJJvmsgO4X6uQ8ByX7RmTPqQ=";
+      };
       packages.default = packages.occasion;
     })
     // flake-utils.lib.eachDefaultSystemPassThrough (system: {
