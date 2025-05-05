@@ -47,12 +47,14 @@ in {
     };
     home.activation = mkIf (cfg.settings != {}) {
       checkOccasionConfigFile = lib.hm.dag.entryBefore ["writeBoundary"] ''
-        if ! output=$(${cfg.package}/bin/occasion --check 2>&1); then
-          echo "❌ Occasion config check failed:"
-          echo "$output"
-          exit 1
-        else
-          echo "✅ Occasion config check passed."
+        if [ -f "$HOME/.config/occasion.json" ]; then
+          if ! output=$(${cfg.package}/bin/occasion --check 2>&1); then
+            echo "❌ Occasion config check failed:"
+            echo "$output"
+            exit 1
+          else
+            echo "✅ Occasion config check passed."
+          fi
         fi
       '';
     };
