@@ -228,9 +228,9 @@ mod unit_tests {
     #[test]
     fn test_tokenizer_escaped() {
         let test = "hi :3 (this is part of a format string (and another)[underline] )[bold] and this is not \\(this is escaped\\)".to_string();
-        let result = tokenize(test);
+        let result = Parser::tokenize(test);
         assert_eq!(
-            result,
+            result.tokens,
             [
                 Token::Literal("hi :3 ".to_string()),
                 Token::OpenContent,
@@ -282,7 +282,13 @@ mod unit_tests {
         let test = "hi (guys)[underline] (this one is green( and this one is also underlined and bold!)[underline bold])[fg:green] i am not green".to_string();
         let test_struct = FormatString {
             nodes: vec![
-                FormatStringNode::String("hi guys ".to_string()),
+                FormatStringNode::String("hi ".to_string()),
+                FormatStringNode::Formatted(FormatNode {
+                    children: vec![FormatStringNode::String("guys".to_string())],
+                    style: Style::from(Styles::Underline),
+                    ..Default::default()
+                }),
+                FormatStringNode::String(" ".to_string()),
                 FormatStringNode::Formatted(FormatNode {
                     children: vec![
                         FormatStringNode::String("this one is green".to_string()),
@@ -302,5 +308,60 @@ mod unit_tests {
         };
         let formatted = FormatString::try_from(test);
         assert_eq!(formatted.unwrap(), test_struct);
+    }
+
+    #[test]
+    fn parse_error_bracket_mismatch() {
+        let parser = Parser::tokenize("this (text isnt[fg:pink] working".to_string());
+        let parser2 = Parser::tokenize("this text isnt)[fg:pink] working".to_string());
+        let parser3 = Parser::tokenize("this (text isnt)[fg:pink working".to_string());
+        let parser4 = Parser::tokenize("this (text isnt)fg:pink] working".to_string());
+        assert!(matches!(
+            parser.parse().unwrap_err(),
+            FormatError::UnmatchedBracket
+        ));
+        assert!(matches!(
+            parser2.parse().unwrap_err(),
+            FormatError::UnmatchedBracket
+        ));
+        assert!(matches!(
+            parser3.parse().unwrap_err(),
+            FormatError::UnmatchedBracket
+        ));
+        assert!(matches!(
+            parser4.parse().unwrap_err(),
+            FormatError::UnmatchedBracket
+        ));
+    }
+    #[test]
+    fn parse_error_bracket_trailing() {
+        let parser = Parser::tokenize("this (text isnt working)[underline".to_string());
+        let parser2 = Parser::tokenize("this (text isnt working".to_string());
+        assert!(matches!(
+            parser.parse().unwrap_err(),
+            FormatError::TrailingBracket
+        ));
+        assert!(matches!(
+            parser2.parse().unwrap_err(),
+            FormatError::TrailingBracket
+        ));
+    }
+    #[test]
+    fn parse_error_bad_hex() {
+        let mismatch = "this hex no (workie)[underline fg:#ZZAA11]".to_string();
+        let parser = Parser::tokenize(mismatch);
+        assert!(matches!(
+            parser.parse().unwrap_err(),
+            FormatError::InvalidHex(_)
+        ))
+    }
+    #[test]
+    fn parse_error_bad_style() {
+        let mismatch = "this style no (workie)[cle]".to_string();
+        let parser = Parser::tokenize(mismatch);
+        assert!(matches!(
+            parser.parse().unwrap_err(),
+            FormatError::InvalidStyle
+        ))
     }
 }
