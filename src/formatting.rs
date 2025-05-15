@@ -1,13 +1,21 @@
-use colored::{Color, Style};
+use std::num::ParseIntError;
 
-#[derive(Debug, PartialEq)]
+use colored::{Color, ColoredString, Style, Styles};
+
+#[derive(Debug, PartialEq, Default)]
 pub struct FormatString {
     nodes: Vec<FormatStringNode>,
 }
 #[derive(thiserror::Error, Debug)]
 pub enum FormatError {
-    #[error("Incomplete format string")]
-    Incomplete(String),
+    #[error("Trailing Bracket")]
+    TrailingBracket,
+    #[error("Unmatched Bracket")]
+    UnmatchedBracket,
+    #[error("Invalid Hex code")]
+    InvalidHex(#[from] ParseIntError),
+    #[error("InvalidStyle")]
+    InvalidStyle,
 }
 #[derive(Debug, PartialEq)]
 enum FormatStringNode {
@@ -35,6 +43,11 @@ enum Token {
 struct Parser {
     tokens: Vec<Token>,
     pos: usize,
+}
+#[derive(PartialEq)]
+enum ParsePhase {
+    Content,
+    Style,
 }
 
 impl Parser {
@@ -71,11 +84,112 @@ impl Parser {
         }
         Self { tokens, pos: 0 }
     }
+    fn parse(mut self) -> Result<FormatString, FormatError> {
+        let mut str = FormatString::default();
+        while let Some(token) = self.tokens.get(self.pos) {
+            match token {
+                Token::CloseContent | Token::OpenStyle | Token::CloseStyle => (),
+                Token::OpenContent => str
+                    .nodes
+                    .push(FormatStringNode::Formatted(self.parse_formatted()?)),
+                Token::Literal(lit) => str.nodes.push(FormatStringNode::String(lit.clone())),
+            }
+            self.pos += 1;
+        }
+        Ok(str)
+    }
+    /// Parses an `Token::OpenContent` until it finds a matching `Token::CloseStyle`
+    fn parse_formatted(&mut self) -> Result<FormatNode, FormatError> {
+        self.pos += 1;
+        let mut res = FormatNode::default();
+        let mut phase = ParsePhase::Content;
+        'main: loop {
+            match self.tokens.get(self.pos) {
+                Some(token) => match token {
+                    Token::OpenContent => match phase {
+                        ParsePhase::Content => res
+                            .children
+                            .push(FormatStringNode::Formatted(self.parse_formatted()?)),
+                        ParsePhase::Style => break Err(FormatError::UnmatchedBracket),
+                    },
+                    Token::CloseContent => match phase {
+                        ParsePhase::Content => {
+                            phase = ParsePhase::Style;
+                        }
+                        ParsePhase::Style => break Err(FormatError::UnmatchedBracket),
+                    },
+                    Token::OpenStyle => match phase {
+                        ParsePhase::Content => break Err(FormatError::UnmatchedBracket),
+                        ParsePhase::Style => (),
+                    },
+                    Token::CloseStyle => match phase {
+                        ParsePhase::Content => break Err(FormatError::UnmatchedBracket),
+                        ParsePhase::Style => break Ok(res),
+                    },
+                    Token::Literal(lit) => match phase {
+                        ParsePhase::Content => {
+                            res.children.push(FormatStringNode::String(lit.clone()))
+                        }
+                        ParsePhase::Style => {
+                            let mut style = Style::default();
+
+                            for style_str in lit.split(" ") {
+                                if let Some(fg) = style_str.strip_prefix("fg:") {
+                                    if let Some(hex) = fg.strip_prefix("#") {
+                                        _ = res.fg.get_or_insert(Color::TrueColor {
+                                            r: u8::from_str_radix(&hex[0..2], 16)?,
+                                            g: u8::from_str_radix(&hex[2..4], 16)?,
+                                            b: u8::from_str_radix(&hex[4..6], 16)?,
+                                        })
+                                    } else {
+                                        _ = res.fg.get_or_insert(Color::from(fg))
+                                    }
+                                } else if let Some(bg) = style_str.strip_prefix("bg:") {
+                                    if let Some(hex) = bg.strip_prefix("#") {
+                                        _ = res.bg.get_or_insert(Color::TrueColor {
+                                            r: u8::from_str_radix(&hex[0..2], 16)?,
+                                            g: u8::from_str_radix(&hex[2..4], 16)?,
+                                            b: u8::from_str_radix(&hex[4..6], 16)?,
+                                        })
+                                    } else {
+                                        _ = res.bg.get_or_insert(Color::from(bg))
+                                    }
+                                } else {
+                                    style |= match style_str.to_lowercase().as_ref() {
+                                        "clear" => Styles::Clear,
+                                        "bold" => Styles::Bold,
+                                        "dimmed" => Styles::Dimmed,
+                                        "underline" => Styles::Underline,
+                                        "reversed" => Styles::Reversed,
+                                        "italic" => Styles::Italic,
+                                        "blink" => Styles::Blink,
+                                        "hidden" => Styles::Hidden,
+                                        "strikethrough" => Styles::Strikethrough,
+                                        _ => break 'main Err(FormatError::InvalidStyle),
+                                    };
+                                }
+                            }
+
+                            res.style = style;
+                        }
+                    },
+                },
+                None => break Err(FormatError::TrailingBracket),
+            }
+            self.pos += 1;
+        }
+    }
 }
 
 impl TryFrom<String> for FormatString {
     type Error = FormatError;
     fn try_from(value: String) -> Result<Self, Self::Error> {
+        let parser = Parser::tokenize(value);
+        parser.parse()
+    }
+}
+impl From<FormatString> for ColoredString {
+    fn from(value: FormatString) -> Self {
         todo!()
     }
 }
