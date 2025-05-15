@@ -6,7 +6,7 @@ use std::{
 };
 
 use chrono::{Month, Weekday};
-use colored::Colorize;
+use colored::{Color, Colorize, Style};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -90,6 +90,13 @@ pub enum DayOf {
     Week(HashSet<Weekday>),
     #[serde(rename = "month")]
     Month(HashSet<u8>),
+}
+#[derive(Debug, Clone)]
+pub struct FormattedString {
+    inner: Box<FormattedString>,
+    fg: Option<Color>,
+    bg: Option<Color>,
+    style: Style,
 }
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
