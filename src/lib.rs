@@ -2,6 +2,7 @@ use config::{Config, MultipleBehavior};
 
 pub mod config;
 pub mod errors;
+pub mod formatting;
 pub mod time;
 
 pub fn output_of(config: &Config) -> String {

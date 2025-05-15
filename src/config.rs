@@ -91,13 +91,6 @@ pub enum DayOf {
     #[serde(rename = "month")]
     Month(HashSet<u8>),
 }
-#[derive(Debug, Clone)]
-pub struct FormattedString {
-    inner: Box<FormattedString>,
-    fg: Option<Color>,
-    bg: Option<Color>,
-    style: Style,
-}
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(deny_unknown_fields)]
 pub enum MultipleBehavior {
